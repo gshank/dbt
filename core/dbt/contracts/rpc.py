@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional, Union, List, Any, Dict, Type, Sequence
 
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 from dbt.dataclass_schema.helpers import StrEnum
 
 from dbt.contracts.graph.compiled import CompileResultNode
@@ -35,7 +35,7 @@ TaskID = uuid.UUID
 
 
 @dataclass
-class RPCParameters(JsonSchemaMixin):
+class RPCParameters(dbtClassMixin):
     timeout: Optional[float]
     task_tags: TaskTags
 
@@ -132,7 +132,7 @@ class StatusParameters(RPCParameters):
 
 
 @dataclass
-class GCSettings(JsonSchemaMixin):
+class GCSettings(dbtClassMixin):
     # start evicting the longest-ago-ended tasks here
     maxsize: int
     # start evicting all tasks before now - auto_reap_age when we have this
@@ -254,7 +254,7 @@ class RemoteExecutionResult(ExecutionResult, RemoteResult):
 
 
 @dataclass
-class ResultTable(JsonSchemaMixin):
+class ResultTable(dbtClassMixin):
     column_names: List[str]
     rows: List[Any]
 
@@ -411,7 +411,7 @@ class TaskHandlerState(StrEnum):
 
 
 @dataclass
-class TaskTiming(JsonSchemaMixin):
+class TaskTiming(dbtClassMixin):
     state: TaskHandlerState
     start: Optional[datetime]
     end: Optional[datetime]

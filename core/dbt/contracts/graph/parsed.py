@@ -13,8 +13,8 @@ from typing import (
     TypeVar,
 )
 
-from dbt.dataclass_schema import JsonSchemaMixin
-from dbt.dataclass_schema.helpers import ExtensibleJsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
+from dbt.dataclass_schema.helpers import ExtensibleDbtClassMixin
 
 from dbt.clients.system import write_file
 from dbt.contracts.files import FileHash, MAXIMUM_SEED_SIZE_NAME
@@ -51,7 +51,7 @@ from .model_config import (  # noqa
 @dataclass
 class ColumnInfo(
     AdditionalPropertiesMixin,
-    ExtensibleJsonSchemaMixin,
+    ExtensibleDbtClassMixin,
     Replaceable
 ):
     name: str
@@ -64,7 +64,7 @@ class ColumnInfo(
 
 
 @dataclass
-class HasFqn(JsonSchemaMixin, Replaceable):
+class HasFqn(dbtClassMixin, Replaceable):
     fqn: List[str]
 
     def same_fqn(self, other: 'HasFqn') -> bool:
@@ -72,12 +72,12 @@ class HasFqn(JsonSchemaMixin, Replaceable):
 
 
 @dataclass
-class HasUniqueID(JsonSchemaMixin, Replaceable):
+class HasUniqueID(dbtClassMixin, Replaceable):
     unique_id: str
 
 
 @dataclass
-class MacroDependsOn(JsonSchemaMixin, Replaceable):
+class MacroDependsOn(dbtClassMixin, Replaceable):
     macros: List[str] = field(default_factory=list)
 
     # 'in' on lists is O(n) so this is O(n^2) for # of macros
@@ -96,12 +96,12 @@ class DependsOn(MacroDependsOn):
 
 
 @dataclass
-class HasRelationMetadata(JsonSchemaMixin, Replaceable):
+class HasRelationMetadata(dbtClassMixin, Replaceable):
     database: Optional[str]
     schema: str
 
 
-class ParsedNodeMixins(JsonSchemaMixin):
+class ParsedNodeMixins(dbtClassMixin):
     resource_type: NodeType
     depends_on: DependsOn
     config: NodeConfig
@@ -132,7 +132,7 @@ class ParsedNodeMixins(JsonSchemaMixin):
         self.meta = patch.meta
         self.docs = patch.docs
         if flags.STRICT_MODE:
-            assert isinstance(self, JsonSchemaMixin)
+            assert isinstance(self, dbtClassMixin)
             self.to_dict(validate=True, omit_none=False)
 
     def get_materialization(self):
@@ -335,14 +335,14 @@ class ParsedSeedNode(ParsedNode):
 
 
 @dataclass
-class TestMetadata(JsonSchemaMixin, Replaceable):
+class TestMetadata(dbtClassMixin, Replaceable):
     namespace: Optional[str]
     name: str
     kwargs: Dict[str, Any]
 
 
 @dataclass
-class HasTestMetadata(JsonSchemaMixin):
+class HasTestMetadata(dbtClassMixin):
     test_metadata: TestMetadata
 
 
@@ -443,7 +443,7 @@ class ParsedMacro(UnparsedBaseNode, HasUniqueID):
         self.docs = patch.docs
         self.arguments = patch.arguments
         if flags.STRICT_MODE:
-            assert isinstance(self, JsonSchemaMixin)
+            assert isinstance(self, dbtClassMixin)
             self.to_dict(validate=True, omit_none=False)
 
     def same_contents(self, other: Optional['ParsedMacro']) -> bool:

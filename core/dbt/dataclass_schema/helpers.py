@@ -2,7 +2,7 @@ from dataclasses import fields
 from enum import Enum
 from typing import Type
 
-from dbt.dataclass_schema import JsonSchemaMixin, FieldEncoder
+from dbt.dataclass_schema import dbtClassMixin, FieldEncoder
 
 
 class StrEnum(str, Enum):
@@ -30,10 +30,10 @@ def register_pattern(base_type: Type, pattern: str) -> None:
         def json_schema(self):
             return {"type": "string", "pattern": pattern}
 
-    JsonSchemaMixin.register_field_encoders({base_type: PatternEncoder()})
+    dbtClassMixin.register_field_encoders({base_type: PatternEncoder()})
 
 
-class HyphenatedJsonSchemaMixin(JsonSchemaMixin):
+class HyphenateddbtClassMixin(dbtClassMixin):
     @classmethod
     def field_mapping(cls):
         result = {}
@@ -47,5 +47,5 @@ class HyphenatedJsonSchemaMixin(JsonSchemaMixin):
         return result
 
 
-class ExtensibleJsonSchemaMixin(JsonSchemaMixin):
+class ExtensibleDbtClassMixin(dbtClassMixin):
     ADDITIONAL_PROPERTIES = True

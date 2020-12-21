@@ -13,7 +13,7 @@ from dbt.exceptions import (
 )
 from dbt.version import __version__
 from dbt.tracking import get_invocation_id
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 
 MacroKey = Tuple[str, str]
 SourceKey = Tuple[str, str]
@@ -135,7 +135,7 @@ def get_metadata_env() -> Dict[str, str]:
 
 
 @dataclasses.dataclass
-class BaseArtifactMetadata(JsonSchemaMixin):
+class BaseArtifactMetadata(dbtClassMixin):
     dbt_schema_version: str
     dbt_version: str = __version__
     generated_at: datetime = dataclasses.field(
@@ -158,7 +158,7 @@ def schema_version(name: str, version: int):
 
 
 @dataclasses.dataclass
-class VersionedSchema(JsonSchemaMixin):
+class VersionedSchema(dbtClassMixin):
     dbt_schema_version: ClassVar[SchemaVersion]
 
     @classmethod

@@ -4,7 +4,7 @@ import re
 from dbt.exceptions import VersionsNotCompatibleException
 import dbt.utils
 
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 from dbt.dataclass_schema.helpers import StrEnum
 from typing import Optional
 
@@ -18,7 +18,7 @@ class Matchers(StrEnum):
 
 
 @dataclass
-class VersionSpecification(JsonSchemaMixin):
+class VersionSpecification(dbtClassMixin):
     major: Optional[str]
     minor: Optional[str]
     patch: Optional[str]

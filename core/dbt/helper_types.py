@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import NewType, Tuple, AbstractSet
 
 from dbt.dataclass_schema import (
-    FieldEncoder, JsonSchemaMixin, JsonDict, ValidationError
+    FieldEncoder, dbtClassMixin, JsonDict, ValidationError
 )
 from dbt.dataclass_schema.helpers import StrEnum
 
@@ -66,12 +66,12 @@ class NVEnum(StrEnum):
 
 
 @dataclass
-class NoValue(JsonSchemaMixin):
+class NoValue(dbtClassMixin):
     """Sometimes, you want a way to say none that isn't None"""
     novalue: NVEnum = NVEnum.novalue
 
 
-JsonSchemaMixin.register_field_encoders({
+dbtClassMixin.register_field_encoders({
     Port: PortEncoder(),
     timedelta: TimeDeltaFieldEncoder(),
     Path: PathEncoder(),

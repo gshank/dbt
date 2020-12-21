@@ -6,7 +6,7 @@ from typing import (
     Iterable, Dict, Any, Union, List, Optional, Generic, TypeVar, Type
 )
 
-from dbt.dataclass_schema import ValidationError, JsonSchemaMixin
+from dbt.dataclass_schema import ValidationError, dbtClassMixin
 
 from dbt.adapters.factory import get_adapter, get_adapter_package_names
 from dbt.clients.jinja import get_rendered, add_rendered_test_kwargs
@@ -759,7 +759,7 @@ class YamlDocsReader(YamlReader):
         raise NotImplementedError('parse is abstract')
 
 
-T = TypeVar('T', bound=JsonSchemaMixin)
+T = TypeVar('T', bound=dbtClassMixin)
 
 
 class SourceParser(YamlDocsReader):

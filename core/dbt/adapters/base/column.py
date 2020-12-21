@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 import re
 
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 from dbt.exceptions import RuntimeException
 
 from typing import Dict, ClassVar, Any, Optional
 
 
 @dataclass
-class Column(JsonSchemaMixin):
+class Column(dbtClassMixin):
     TYPE_LABELS: ClassVar[Dict[str, str]] = {
         'STRING': 'TEXT',
         'TIMESTAMP': 'TIMESTAMP',

@@ -5,10 +5,10 @@ from dbt.logger import GLOBAL_LOGGER as logger  # noqa
 from dbt import tracking
 from dbt import ui
 
-from dbt.dataclass_schema import JsonSchemaMixin, ValidationError
+from dbt.dataclass_schema import dbtClassMixin, ValidationError
 from dbt.dataclass_schema.helpers import (
-    HyphenatedJsonSchemaMixin, register_pattern,
-    ExtensibleJsonSchemaMixin
+    HyphenateddbtClassMixin, register_pattern,
+    ExtensibleDbtClassMixin
 )
 
 from dataclasses import dataclass, field
@@ -32,7 +32,7 @@ register_pattern(
 
 
 @dataclass
-class Quoting(JsonSchemaMixin, Mergeable):
+class Quoting(dbtClassMixin, Mergeable):
     identifier: Optional[bool]
     schema: Optional[bool]
     database: Optional[bool]
@@ -40,7 +40,7 @@ class Quoting(JsonSchemaMixin, Mergeable):
 
 
 @dataclass
-class Package(Replaceable, HyphenatedJsonSchemaMixin):
+class Package(Replaceable, HyphenateddbtClassMixin):
     pass
 
 
@@ -82,7 +82,7 @@ PackageSpec = Union[LocalPackage, GitPackage, RegistryPackage]
 
 
 @dataclass
-class PackageConfig(JsonSchemaMixin, Replaceable):
+class PackageConfig(dbtClassMixin, Replaceable):
     packages: List[PackageSpec]
 
 
@@ -98,13 +98,13 @@ class ProjectPackageMetadata:
 
 
 @dataclass
-class Downloads(ExtensibleJsonSchemaMixin, Replaceable):
+class Downloads(ExtensibleDbtClassMixin, Replaceable):
     tarball: str
 
 
 @dataclass
 class RegistryPackageMetadata(
-    ExtensibleJsonSchemaMixin,
+    ExtensibleDbtClassMixin,
     ProjectPackageMetadata,
 ):
     downloads: Downloads
@@ -155,7 +155,7 @@ BANNED_PROJECT_NAMES = {
 
 
 @dataclass
-class Project(HyphenatedJsonSchemaMixin, Replaceable):
+class Project(HyphenateddbtClassMixin, Replaceable):
     name: Name
     version: Union[SemverString, float]
     config_version: int
@@ -203,7 +203,7 @@ class Project(HyphenatedJsonSchemaMixin, Replaceable):
 
 
 @dataclass
-class UserConfig(ExtensibleJsonSchemaMixin, Replaceable, UserConfigContract):
+class UserConfig(ExtensibleDbtClassMixin, Replaceable, UserConfigContract):
     send_anonymous_usage_stats: bool = DEFAULT_SEND_ANONYMOUS_USAGE_STATS
     use_colors: Optional[bool] = None
     partial_parse: Optional[bool] = None
@@ -223,7 +223,7 @@ class UserConfig(ExtensibleJsonSchemaMixin, Replaceable, UserConfigContract):
 
 
 @dataclass
-class ProfileConfig(HyphenatedJsonSchemaMixin, Replaceable):
+class ProfileConfig(HyphenateddbtClassMixin, Replaceable):
     profile_name: str = field(metadata={'preserve_underscore': True})
     target_name: str = field(metadata={'preserve_underscore': True})
     config: UserConfig
@@ -250,5 +250,5 @@ class Configuration(Project, ProfileConfig):
 
 
 @dataclass
-class ProjectList(JsonSchemaMixin):
+class ProjectList(dbtClassMixin):
     projects: Dict[str, Project]

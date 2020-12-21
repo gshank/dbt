@@ -19,7 +19,7 @@ from dbt.logger import (
 )
 from dbt.utils import lowercase
 from dbt.dataclass_schema.helpers import StrEnum
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 
 import agate
 
@@ -29,7 +29,7 @@ from typing import Union, Dict, List, Optional, Any, NamedTuple, Sequence
 
 
 @dataclass
-class TimingInfo(JsonSchemaMixin):
+class TimingInfo(dbtClassMixin):
     name: str
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -56,7 +56,7 @@ class collect_timing_info:
 
 
 @dataclass
-class BaseResult(JsonSchemaMixin):
+class BaseResult(dbtClassMixin):
     node: CompileResultNode
     error: Optional[str] = None
     status: Union[None, str, int, bool] = None
@@ -98,7 +98,7 @@ class RunModelResult(WritableRunModelResult):
 
 
 @dataclass
-class ExecutionResult(JsonSchemaMixin):
+class ExecutionResult(dbtClassMixin):
     results: Sequence[BaseResult]
     elapsed_time: float
 
@@ -187,7 +187,7 @@ class RunOperationResultsArtifact(RunOperationResult, ArtifactMixin):
 
 
 @dataclass
-class SourceFreshnessResultMixin(JsonSchemaMixin):
+class SourceFreshnessResultMixin(dbtClassMixin):
     max_loaded_at: datetime
     snapshotted_at: datetime
     age: float
@@ -221,14 +221,14 @@ class FreshnessErrorEnum(StrEnum):
 
 
 @dataclass
-class SourceFreshnessRuntimeError(JsonSchemaMixin):
+class SourceFreshnessRuntimeError(dbtClassMixin):
     unique_id: str
     error: str
     state: FreshnessErrorEnum
 
 
 @dataclass
-class SourceFreshnessOutput(JsonSchemaMixin):
+class SourceFreshnessOutput(dbtClassMixin):
     unique_id: str
     max_loaded_at: datetime
     snapshotted_at: datetime
@@ -330,7 +330,7 @@ CatalogKey = NamedTuple(
 
 
 @dataclass
-class StatsItem(JsonSchemaMixin):
+class StatsItem(dbtClassMixin):
     id: str
     label: str
     value: Primitive
@@ -342,7 +342,7 @@ StatsDict = Dict[str, StatsItem]
 
 
 @dataclass
-class ColumnMetadata(JsonSchemaMixin):
+class ColumnMetadata(dbtClassMixin):
     type: str
     comment: Optional[str]
     index: int
@@ -353,7 +353,7 @@ ColumnMap = Dict[str, ColumnMetadata]
 
 
 @dataclass
-class TableMetadata(JsonSchemaMixin):
+class TableMetadata(dbtClassMixin):
     type: str
     database: Optional[str]
     schema: str
@@ -363,7 +363,7 @@ class TableMetadata(JsonSchemaMixin):
 
 
 @dataclass
-class CatalogTable(JsonSchemaMixin, Replaceable):
+class CatalogTable(dbtClassMixin, Replaceable):
     metadata: TableMetadata
     columns: ColumnMap
     stats: StatsDict
@@ -386,7 +386,7 @@ class CatalogMetadata(BaseArtifactMetadata):
 
 
 @dataclass
-class CatalogResults(JsonSchemaMixin):
+class CatalogResults(dbtClassMixin):
     nodes: Dict[str, CatalogTable]
     sources: Dict[str, CatalogTable]
     errors: Optional[List[str]]

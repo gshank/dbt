@@ -146,7 +146,7 @@ class UuidField(FieldEncoder[UUID]):
 _ValueEncoder = Callable[[Any, Any, bool], Any]
 _ValueDecoder = Callable[[str, Any, Any], Any]
 
-T = TypeVar("T", bound="JsonSchemaMixin")
+T = TypeVar("T", bound="dbtClassMixin")
 
 
 @functools.lru_cache()
@@ -184,7 +184,7 @@ def _validate_schema(schema_cls: Type[T]) -> JsonDict:
 # a restriction is a list of Field, str pairs
 Restriction = List[Tuple[Field, str]]
 # a restricted variant is a pair of an object that has fields with restrictions
-# and those restrictions. Only JsonSchemaMixin subclasses may have restrictied
+# and those restrictions. Only dbtClassMixin subclasses may have restrictied
 # fields.
 Variant = Tuple[Type[T], Optional[Restriction]]
 
@@ -195,10 +195,10 @@ def _get_restrictions(variant_type: Type) -> Restriction:
     field's name in json and the Field is the dataclass-level
     field name.
 
-    If the variant isn't a JsonSchemaMixin subclass,
+    If the variant isn't a dbtClassMixin subclass,
     there are no restrictions.
     """
-    if not issubclass_safe(variant_type, JsonSchemaMixin):
+    if not issubclass_safe(variant_type, dbtClassMixin):
         return []
     restrictions: Restriction = []
     for field, target_name in variant_type._get_fields():
@@ -212,7 +212,7 @@ def get_union_fields(field_type: Union[Any]) -> List[Variant]:
     Unions have a __args__ that is all their variants (after typing's
     type-collapsing magic has run, so caveat emptor...)
 
-    JsonSchemaMixin dataclasses have `Field`s, returned by the
+    dbtClassMixin dataclasses have `Field`s, returned by the
     `_get_fields` method.
 
     This method returns list of 2-tuples:
@@ -269,7 +269,7 @@ class CompleteSchema:
 _HOLOGRAM_LOCK = threading.RLock()
 
 
-class JsonSchemaMixin:
+class dbtClassMixin:
     """Mixin which adds methods to generate a JSON schema and
        convert to and from JSON encodable dicts with validation
        against the schema
@@ -307,7 +307,7 @@ class JsonSchemaMixin:
           the base, these are added globally.
           The DateTimeFieldEncoder is included by default.
         """
-        if cls is not JsonSchemaMixin:
+        if cls is not dbtClassMixin:
             cls._field_encoders = {**cls._field_encoders, **field_encoders}
         else:
             cls._field_encoders.update(field_encoders)
@@ -599,7 +599,7 @@ class JsonSchemaMixin:
 
     @classmethod
     def _find_matching_validator(cls: Type[T], data: JsonDict) -> T:
-        if cls is not JsonSchemaMixin:
+        if cls is not dbtClassMixin:
             raise NotImplementedError
 
         decoded = None
@@ -621,7 +621,7 @@ class JsonSchemaMixin:
     def from_dict(cls: Type[T], data: JsonDict, validate=False) -> T:
         """Returns a dataclass instance with all nested classes
            converted from the dict given"""
-        if cls is JsonSchemaMixin:
+        if cls is dbtClassMixin:
             return cls._find_matching_validator(data)
 
         init_values: Dict[str, Any] = {}
@@ -653,12 +653,12 @@ class JsonSchemaMixin:
 
     @staticmethod
     def _is_json_schema_subclass(field_type: Type) -> bool:
-        return issubclass_safe(field_type, JsonSchemaMixin)
+        return issubclass_safe(field_type, dbtClassMixin)
 
     @staticmethod
     def _has_definition(field_type: Type) -> bool:
         return (
-            issubclass_safe(field_type, JsonSchemaMixin) and
+            issubclass_safe(field_type, dbtClassMixin) and
             field_type.__name__ != "PatternProperty"
         )
 
@@ -947,10 +947,10 @@ class JsonSchemaMixin:
         embedding into other schemas
         or documents supporting JSON schema such as Swagger specs.
         """
-        if cls is JsonSchemaMixin:
+        if cls is dbtClassMixin:
             warnings.warn(
-                "Calling 'JsonSchemaMixin.json_schema' is deprecated. "
-                "Use 'JsonSchemaMixin.all_json_schemas' instead",
+                "Calling 'dbtClassMixin.json_schema' is deprecated. "
+                "Use 'dbtClassMixin.all_json_schemas' instead",
                 DeprecationWarning,
             )
             return cls.all_json_schemas()

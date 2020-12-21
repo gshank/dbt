@@ -1,7 +1,7 @@
 import logbook
 import logbook.queues
 from jsonrpc.exceptions import JSONRPCError
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 from dbt.dataclass_schema.helpers import StrEnum
 
 from dataclasses import dataclass, field
@@ -26,7 +26,7 @@ class QueueMessageType(StrEnum):
 
 
 @dataclass
-class QueueMessage(JsonSchemaMixin):
+class QueueMessage(dbtClassMixin):
     message_type: QueueMessageType
 
 

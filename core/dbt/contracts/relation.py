@@ -5,7 +5,7 @@ from typing import (
 )
 from typing_extensions import Protocol
 
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 from dbt.dataclass_schema.helpers import StrEnum
 
 from dbt import deprecations
@@ -32,7 +32,7 @@ class HasQuoting(Protocol):
     quoting: Dict[str, bool]
 
 
-class FakeAPIObject(JsonSchemaMixin, Replaceable, Mapping):
+class FakeAPIObject(dbtClassMixin, Replaceable, Mapping):
     # override the mapping truthiness, len is always >1
     def __bool__(self):
         return True

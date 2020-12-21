@@ -6,9 +6,9 @@ from typing import (
 )
 from typing_extensions import Protocol
 
-from dbt.dataclass_schema import JsonSchemaMixin
+from dbt.dataclass_schema import dbtClassMixin
 from dbt.dataclass_schema.helpers import (
-    StrEnum, register_pattern, ExtensibleJsonSchemaMixin
+    StrEnum, register_pattern, ExtensibleDbtClassMixin
 )
 
 from dbt.contracts.util import Replaceable
@@ -30,20 +30,20 @@ class ConnectionState(StrEnum):
 
 
 @dataclass(init=False)
-class Connection(ExtensibleJsonSchemaMixin, Replaceable):
+class Connection(ExtensibleDbtClassMixin, Replaceable):
     type: Identifier
     name: Optional[str]
     state: ConnectionState = ConnectionState.INIT
     transaction_open: bool = False
     # prevent serialization
     _handle: Optional[Any] = None
-    _credentials: JsonSchemaMixin = field(init=False)
+    _credentials: dbtClassMixin = field(init=False)
 
     def __init__(
         self,
         type: Identifier,
         name: Optional[str],
-        credentials: JsonSchemaMixin,
+        credentials: dbtClassMixin,
         state: ConnectionState = ConnectionState.INIT,
         transaction_open: bool = False,
         handle: Optional[Any] = None,
@@ -102,7 +102,7 @@ class LazyHandle:
 # will work.
 @dataclass  # type: ignore
 class Credentials(
-    ExtensibleJsonSchemaMixin,
+    ExtensibleDbtClassMixin,
     Replaceable,
     metaclass=abc.ABCMeta
 ):
@@ -205,7 +205,7 @@ DEFAULT_QUERY_COMMENT = '''
 
 
 @dataclass
-class QueryComment(JsonSchemaMixin):
+class QueryComment(dbtClassMixin):
     comment: str = DEFAULT_QUERY_COMMENT
     append: bool = False
 

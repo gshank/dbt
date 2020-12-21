@@ -10,7 +10,7 @@ import dbt.flags
 
 import boto3
 
-from dbt.dataclass_schema import FieldEncoder, JsonSchemaMixin
+from dbt.dataclass_schema import FieldEncoder, dbtClassMixin
 from dbt.dataclass_schema.helpers import StrEnum
 
 from dataclasses import dataclass, field
@@ -28,7 +28,7 @@ class IAMDurationEncoder(FieldEncoder):
         return {'type': 'integer', 'minimum': 0, 'maximum': 65535}
 
 
-JsonSchemaMixin.register_field_encoders({IAMDuration: IAMDurationEncoder()})
+dbtClassMixin.register_field_encoders({IAMDuration: IAMDurationEncoder()})
 
 
 class RedshiftConnectionMethod(StrEnum):

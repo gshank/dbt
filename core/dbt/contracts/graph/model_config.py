@@ -10,7 +10,7 @@ from typing import (
 import jsonschema  # type: ignore
 
 from dbt.dataclass_schema import (
-    _validate_schema, JsonSchemaMixin, ValidationError,
+    _validate_schema, dbtClassMixin, ValidationError,
 )
 from dbt.dataclass_schema.helpers import StrEnum, register_pattern
 
@@ -184,7 +184,7 @@ class All(StrEnum):
 
 
 @dataclass
-class Hook(JsonSchemaMixin, Replaceable):
+class Hook(dbtClassMixin, Replaceable):
     sql: str
     transaction: bool = True
     index: Optional[int] = None
@@ -474,7 +474,7 @@ def _relevance_without_strategy(error: jsonschema.ValidationError):
 
 
 @dataclass
-class SnapshotWrapper(JsonSchemaMixin):
+class SnapshotWrapper(dbtClassMixin):
     """This is a little wrapper to let us serialize/deserialize the
     SnapshotVariants union.
     """
@@ -566,7 +566,7 @@ class GenericSnapshotConfig(SnapshotConfig):
     ) -> Dict[str, Any]:
         # This is the method to override in dataclass_schema if you want
         # to do clever things about the json schema and have classes that
-        # contain instances of your JsonSchemaMixin respect the change.
+        # contain instances of your dbtClassMixin respect the change.
         schema = super()._collect_json_schema(definitions)
 
         # Instead of just the strategy we'd calculate normally, say
