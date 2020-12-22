@@ -5,8 +5,7 @@ from typing import (
 )
 from typing_extensions import Protocol
 
-from dbt.dataclass_schema import dbtClassMixin
-from dbt.dataclass_schema.helpers import StrEnum
+from dbt.dataclass_schema import dbtClassMixin, StrEnum
 
 from dbt import deprecations
 from dbt.contracts.util import Replaceable
@@ -58,16 +57,24 @@ class FakeAPIObject(dbtClassMixin, Replaceable, Mapping):
         return self.from_dict(value)
 
 
-T = TypeVar('T')
+# T = TypeVar('T')
+"""
+mashumaro does not support generic types, so I just duplicated
+the generic type class that was here previously to get things
+working. We'd probably want to do this differently
+in the future
+
+TODO
+"""
 
 
 @dataclass
-class _ComponentObject(FakeAPIObject, Generic[T]):
-    database: T
-    schema: T
-    identifier: T
+class Policy(FakeAPIObject):
+    database: bool = True
+    schema: bool = True
+    identifier: bool = True
 
-    def get_part(self, key: ComponentName) -> T:
+    def get_part(self, key: ComponentName) -> bool:
         if key == ComponentName.Database:
             return self.database
         elif key == ComponentName.Schema:
@@ -80,22 +87,14 @@ class _ComponentObject(FakeAPIObject, Generic[T]):
                 .format(key, list(ComponentName))
             )
 
-    def replace_dict(self, dct: Dict[ComponentName, T]):
-        kwargs: Dict[str, T] = {}
+    def replace_dict(self, dct: Dict[ComponentName, bool]):
+        kwargs: Dict[str, bool] = {}
         for k, v in dct.items():
             kwargs[str(k)] = v
         return self.replace(**kwargs)
 
-
 @dataclass
-class Policy(_ComponentObject[bool]):
-    database: bool = True
-    schema: bool = True
-    identifier: bool = True
-
-
-@dataclass
-class Path(_ComponentObject[Optional[str]]):
+class Path(FakeAPIObject):
     database: Optional[str]
     schema: Optional[str]
     identifier: Optional[str]
@@ -120,3 +119,22 @@ class Path(_ComponentObject[Optional[str]]):
         if part is not None:
             part = part.lower()
         return part
+
+    def get_part(self, key: ComponentName) -> str:
+        if key == ComponentName.Database:
+            return self.database
+        elif key == ComponentName.Schema:
+            return self.schema
+        elif key == ComponentName.Identifier:
+            return self.identifier
+        else:
+            raise ValueError(
+                'Got a key of {}, expected one of {}'
+                .format(key, list(ComponentName))
+            )
+
+    def replace_dict(self, dct: Dict[ComponentName, str]):
+        kwargs: Dict[str, str] = {}
+        for k, v in dct.items():
+            kwargs[str(k)] = v
+        return self.replace(**kwargs)

@@ -33,7 +33,9 @@ from dbt.contracts.project import (
 )
 from dbt.contracts.project import PackageConfig
 
-from dbt.dataclass_schema import ValidationError
+from dbt.dataclass_schema import (
+    ValidationError, HyphenatedDbtClassMixin
+)
 
 from .renderer import DbtProjectYamlRenderer
 from .selectors import (
@@ -306,8 +308,9 @@ class PartialProject(RenderComponents):
         )
 
         try:
+            # TODO  this isn't working with validate=True
             cfg = ProjectContract.from_dict(
-                rendered.project_dict, validate=True
+                rendered.project_dict
             )
         except ValidationError as e:
             raise DbtProjectError(validator_error_message(e)) from e
@@ -588,7 +591,9 @@ class Project:
 
     def validate(self):
         try:
-            ProjectContract.from_dict(self.to_project_config(), validate=True)
+            # TODO : Jank; need to do this to handle aliasing between hyphens and underscores
+            as_dict = self.to_project_config()
+            ProjectContract.from_dict(as_dict)
         except ValidationError as e:
             raise DbtProjectError(validator_error_message(e)) from e
 

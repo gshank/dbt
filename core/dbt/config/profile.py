@@ -161,7 +161,7 @@ class Profile(HasCredentials):
         typename = profile.pop('type')
         try:
             cls = load_plugin(typename)
-            credentials = cls.from_dict(profile)
+            credentials = cls.from_dict(profile, validate=False)
         except (RuntimeException, ValidationError) as e:
             msg = str(e) if isinstance(e, RuntimeException) else e.message
             raise DbtProfileError(
@@ -243,7 +243,7 @@ class Profile(HasCredentials):
             threads=threads,
             credentials=credentials
         )
-        profile.validate()
+        # profile.validate()
         return profile
 
     @classmethod

@@ -6,20 +6,21 @@ from typing import (
 )
 from typing_extensions import Protocol
 
-from dbt.dataclass_schema import dbtClassMixin
-from dbt.dataclass_schema.helpers import (
-    StrEnum, register_pattern, ExtensibleDbtClassMixin
+from dbt.dataclass_schema import (
+    dbtClassMixin, StrEnum, ExtensibleDbtClassMixin
 )
 
 from dbt.contracts.util import Replaceable
 from dbt.exceptions import InternalException
 from dbt.utils import translate_aliases
+from dbt.dataclass_schema import dbtClassMixin, ValidatedStringMixin
+from mashumaro.types import SerializableType
 
 from dbt.logger import GLOBAL_LOGGER as logger
 
 
-Identifier = NewType('Identifier', str)
-register_pattern(Identifier, r'^[A-Za-z_][A-Za-z0-9_]+$')
+class Identifier(ValidatedStringMixin):
+    ValidationRegex = r'^[A-Za-z_][A-Za-z0-9_]+$'
 
 
 class ConnectionState(StrEnum):
@@ -29,6 +30,13 @@ class ConnectionState(StrEnum):
     FAIL = 'fail'
 
 
+# I think that... this is not the right way to do this
+# TODO!!
+class DoNotSerializeType(SerializableType):
+    def _serialize(self) -> None:
+        return None
+
+
 @dataclass(init=False)
 class Connection(ExtensibleDbtClassMixin, Replaceable):
     type: Identifier
@@ -36,8 +44,8 @@ class Connection(ExtensibleDbtClassMixin, Replaceable):
     state: ConnectionState = ConnectionState.INIT
     transaction_open: bool = False
     # prevent serialization
-    _handle: Optional[Any] = None
-    _credentials: dbtClassMixin = field(init=False)
+    _handle: Optional[DoNotSerializeType] = None
+    _credentials: Optional[DoNotSerializeType] = None
 
     def __init__(
         self,

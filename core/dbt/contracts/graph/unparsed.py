@@ -8,8 +8,9 @@ from dbt.contracts.util import (
 import dbt.helper_types  # noqa:F401
 from dbt.exceptions import CompilationException
 
-from dbt.dataclass_schema import dbtClassMixin
-from dbt.dataclass_schema.helpers import StrEnum, ExtensibleDbtClassMixin
+from dbt.dataclass_schema import (
+    dbtClassMixin, StrEnum, ExtensibleDbtClassMixin
+)
 
 from dataclasses import dataclass, field
 from datetime import timedelta

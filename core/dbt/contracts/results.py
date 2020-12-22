@@ -18,10 +18,10 @@ from dbt.logger import (
     GLOBAL_LOGGER as logger,
 )
 from dbt.utils import lowercase
-from dbt.dataclass_schema.helpers import StrEnum
-from dbt.dataclass_schema import dbtClassMixin
+from dbt.dataclass_schema import dbtClassMixin, StrEnum
 
 import agate
+from mashumaro.types import SerializableType
 
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -86,15 +86,15 @@ class WritableRunModelResult(BaseResult, Writable):
     def skipped(self):
         return self.skip
 
+# TODO : Does this work? no-op agate table serialization in RunModelResult
+class SerializableAgateTable(agate.Table, SerializableType):
+    def _serialize(self) -> None:
+        return None
+
 
 @dataclass
 class RunModelResult(WritableRunModelResult):
-    agate_table: Optional[agate.Table] = None
-
-    def to_dict(self, *args, **kwargs):
-        dct = super().to_dict(*args, **kwargs)
-        dct.pop('agate_table', None)
-        return dct
+    agate_table: Optional[SerializableAgateTable] = None
 
 
 @dataclass

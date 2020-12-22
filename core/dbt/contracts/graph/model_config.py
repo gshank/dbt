@@ -10,9 +10,9 @@ from typing import (
 import jsonschema  # type: ignore
 
 from dbt.dataclass_schema import (
-    _validate_schema, dbtClassMixin, ValidationError,
+    _validate_schema, dbtClassMixin, ValidationError, StrEnum,
 )
-from dbt.dataclass_schema.helpers import StrEnum, register_pattern
+from mashumaro.types import SerializableType
 
 from dbt.contracts.graph.unparsed import AdditionalPropertiesAllowed
 from dbt.exceptions import CompilationException, InternalException
@@ -169,9 +169,17 @@ def insensitive_patterns(*patterns: str):
     return '^({})$'.format('|'.join(lowercased))
 
 
-Severity = NewType('Severity', str)
 
-register_pattern(Severity, insensitive_patterns('warn', 'error'))
+class Severity(str, SerializableType):
+    @classmethod
+    def _deserialize(cls, value: str) -> 'Severity':
+        # TODO : Validate here?
+        return Severity(value)
+
+    def _serialize(self) -> str:
+        # TODO : Validate here?
+        return self
+
 
 
 class SnapshotStrategy(StrEnum):
@@ -473,38 +481,6 @@ def _relevance_without_strategy(error: jsonschema.ValidationError):
     return length, validator not in {'anyOf', 'oneOf'}
 
 
-@dataclass
-class SnapshotWrapper(dbtClassMixin):
-    """This is a little wrapper to let us serialize/deserialize the
-    SnapshotVariants union.
-    """
-    config: SnapshotVariants  # mypy: ignore
-
-    @classmethod
-    def validate(cls, data: Any):
-        config = data.get('config', {})
-
-        if config.get('strategy') == 'check':
-            schema = _validate_schema(CheckSnapshotConfig)
-            to_validate = config
-
-        elif config.get('strategy') == 'timestamp':
-            schema = _validate_schema(TimestampSnapshotConfig)
-            to_validate = config
-
-        else:
-            schema = _validate_schema(cls)
-            to_validate = data
-
-        validator = jsonschema.Draft7Validator(schema)
-
-        error = jsonschema.exceptions.best_match(
-            validator.iter_errors(to_validate),
-            key=_relevance_without_strategy,
-        )
-
-        if error is not None:
-            raise ValidationError.create_from(error) from error
 
 
 @dataclass
@@ -630,6 +606,40 @@ class CheckSnapshotConfig(SnapshotConfig):
         self.strategy = strategy
         self.check_cols = check_cols
         super().__init__(**kwargs)
+
+
+@dataclass
+class SnapshotWrapper(dbtClassMixin):
+    """This is a little wrapper to let us serialize/deserialize the
+    SnapshotVariants union.
+    """
+    config: SnapshotVariants  # mypy: ignore
+
+    @classmethod
+    def validate(cls, data: Any):
+        config = data.get('config', {})
+
+        if config.get('strategy') == 'check':
+            schema = _validate_schema(CheckSnapshotConfig)
+            to_validate = config
+
+        elif config.get('strategy') == 'timestamp':
+            schema = _validate_schema(TimestampSnapshotConfig)
+            to_validate = config
+
+        else:
+            schema = _validate_schema(cls)
+            to_validate = data
+
+        validator = jsonschema.Draft7Validator(schema)
+
+        error = jsonschema.exceptions.best_match(
+            validator.iter_errors(to_validate),
+            key=_relevance_without_strategy,
+        )
+
+        if error is not None:
+            raise ValidationError.create_from(error) from error
 
 
 RESOURCE_TYPES: Dict[NodeType, Type[BaseConfig]] = {

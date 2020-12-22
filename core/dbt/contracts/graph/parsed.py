@@ -13,8 +13,9 @@ from typing import (
     TypeVar,
 )
 
-from dbt.dataclass_schema import dbtClassMixin
-from dbt.dataclass_schema.helpers import ExtensibleDbtClassMixin
+from dbt.dataclass_schema import (
+    dbtClassMixin, ExtensibleDbtClassMixin
+)
 
 from dbt.clients.system import write_file
 from dbt.contracts.files import FileHash, MAXIMUM_SEED_SIZE_NAME

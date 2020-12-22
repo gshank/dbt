@@ -4,8 +4,7 @@ import re
 from dbt.exceptions import VersionsNotCompatibleException
 import dbt.utils
 
-from dbt.dataclass_schema import dbtClassMixin
-from dbt.dataclass_schema.helpers import StrEnum
+from dbt.dataclass_schema import dbtClassMixin, StrEnum
 from typing import Optional
 
 
@@ -19,11 +18,11 @@ class Matchers(StrEnum):
 
 @dataclass
 class VersionSpecification(dbtClassMixin):
-    major: Optional[str]
-    minor: Optional[str]
-    patch: Optional[str]
-    prerelease: Optional[str]
-    build: Optional[str]
+    major: Optional[str] = None
+    minor: Optional[str] = None
+    patch: Optional[str] = None
+    prerelease: Optional[str] = None
+    build: Optional[str] = None
     matcher: Matchers = Matchers.EXACT
 
 

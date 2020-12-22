@@ -5,30 +5,37 @@ from dbt.logger import GLOBAL_LOGGER as logger  # noqa
 from dbt import tracking
 from dbt import ui
 
-from dbt.dataclass_schema import dbtClassMixin, ValidationError
-from dbt.dataclass_schema.helpers import (
-    HyphenateddbtClassMixin, register_pattern,
+from dbt.dataclass_schema import (
+    dbtClassMixin, ValidationError,
+    HyphenatedDbtClassMixin,
     ExtensibleDbtClassMixin
 )
 
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Union, Any, NewType
+from dbt.dataclass_schema import dbtClassMixin, ValidatedStringMixin
+from mashumaro.types import SerializableType
 
 PIN_PACKAGE_URL = 'https://docs.getdbt.com/docs/package-management#section-specifying-package-versions' # noqa
 DEFAULT_SEND_ANONYMOUS_USAGE_STATS = True
 
 
-Name = NewType('Name', str)
-register_pattern(Name, r'^[^\d\W]\w*$')
+class Name(ValidatedStringMixin):
+    ValidationRegex = r'^[^\d\W]\w*$'
+
 
 # this does not support the full semver (does not allow a trailing -fooXYZ) and
 # is not restrictive enough for full semver, (allows '1.0'). But it's like
 # 'semver lite'.
-SemverString = NewType('SemverString', str)
-register_pattern(
-    SemverString,
-    r'^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(\.(?:0|[1-9]\d*))?$',
-)
+class SemverString(str, SerializableType):
+    def _serialize(self) -> str:
+        return self
+
+    @classmethod
+    def _deserialize(cls, value: str) -> 'SemverString':
+        return SemverString(value)
+
+
 
 
 @dataclass
@@ -40,7 +47,7 @@ class Quoting(dbtClassMixin, Mergeable):
 
 
 @dataclass
-class Package(Replaceable, HyphenateddbtClassMixin):
+class Package(Replaceable, HyphenatedDbtClassMixin):
     pass
 
 
@@ -155,7 +162,7 @@ BANNED_PROJECT_NAMES = {
 
 
 @dataclass
-class Project(HyphenateddbtClassMixin, Replaceable):
+class Project(dbtClassMixin, Replaceable):
     name: Name
     version: Union[SemverString, float]
     config_version: int
@@ -191,9 +198,30 @@ class Project(HyphenateddbtClassMixin, Replaceable):
     packages: List[PackageSpec] = field(default_factory=list)
     query_comment: Optional[Union[QueryComment, NoValue, str]] = NoValue()
 
+    _ALIASES = {
+        'config-version': 'config_version',
+        'source-paths': 'source_paths',
+        'macro-paths': 'macro_paths',
+        'data-paths': 'data_paths',
+        'test-paths': 'test_paths',
+        'analysis-paths': 'analysis_paths',
+        'docs-paths': 'docs_paths',
+        'asset-paths': 'asset_paths',
+        'target-path': 'target_path',
+        'snapshot-paths': 'snapshot_paths',
+        'clean-targets': 'clean_targets',
+        'log-path': 'log_path',
+        'modules-path': 'modules_path',
+        'on-run-start': 'on_run_start',
+        'on-run-end': 'on_run_end',
+        'require-dbt-version': 'require_dbt_version',
+        'project-root': 'project_root',
+    }
+
     @classmethod
-    def from_dict(cls, data, validate=True) -> 'Project':
-        result = super().from_dict(data, validate=validate)
+    def serialize(cls, data, validate=True) -> 'Project':
+        print("-------- in contracts.project Project.from_dict")
+        result = super().serialize(data, validate=validate, with_aliases=True)
         if result.name in BANNED_PROJECT_NAMES:
             raise ValidationError(
                 f'Invalid project name: {result.name} is a reserved word'
@@ -223,7 +251,7 @@ class UserConfig(ExtensibleDbtClassMixin, Replaceable, UserConfigContract):
 
 
 @dataclass
-class ProfileConfig(HyphenateddbtClassMixin, Replaceable):
+class ProfileConfig(HyphenatedDbtClassMixin, Replaceable):
     profile_name: str = field(metadata={'preserve_underscore': True})
     target_name: str = field(metadata={'preserve_underscore': True})
     config: UserConfig

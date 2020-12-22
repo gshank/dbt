@@ -2,15 +2,29 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
-from typing import NewType, Tuple, AbstractSet
+from typing import NewType, Tuple, AbstractSet, Union
 
 from dbt.dataclass_schema import (
-    FieldEncoder, dbtClassMixin, JsonDict, ValidationError
+    dbtClassMixin, JsonDict, ValidationError, FieldEncoder,
+    StrEnum,
 )
-from dbt.dataclass_schema.helpers import StrEnum
+from mashumaro.types import SerializableType
 
 Port = NewType('Port', int)
 
+class Port(int, SerializableType):
+    @classmethod
+    def _deserialize(cls, value: Union[int, str]) -> 'Port':
+        try:                                       
+            value = int(value)
+        except ValueError:
+            raise ValidationError(f'Cannot encode {value} into port numbr')
+
+        return Port(value)
+
+    def _serialize(self) -> int:
+        # TODO : Validate here?
+        return self
 
 class PortEncoder(FieldEncoder):
     @property
@@ -71,11 +85,11 @@ class NoValue(dbtClassMixin):
     novalue: NVEnum = NVEnum.novalue
 
 
-dbtClassMixin.register_field_encoders({
-    Port: PortEncoder(),
-    timedelta: TimeDeltaFieldEncoder(),
-    Path: PathEncoder(),
-})
+#dbtClassMixin.register_field_encoders({
+#    Port: PortEncoder(),
+#    timedelta: TimeDeltaFieldEncoder(),
+#    Path: PathEncoder(),
+#})
 
 
 FQNPath = Tuple[str, ...]

@@ -5,8 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional, Union, List, Any, Dict, Type, Sequence
 
-from dbt.dataclass_schema import dbtClassMixin
-from dbt.dataclass_schema.helpers import StrEnum
+from dbt.dataclass_schema import dbtClassMixin, StrEnum
 
 from dbt.contracts.graph.compiled import CompileResultNode
 from dbt.contracts.graph.manifest import WritableManifest
