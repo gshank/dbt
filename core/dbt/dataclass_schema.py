@@ -244,10 +244,11 @@ class dbtClassMixin(DataClassDictMixin):
         """
         return {}
 
-    def to_dict(self, omit_none=False, validate=False, with_aliases: Optional[Dict[str, str]]=None):
-        dct = super().to_dict()
-
-        if self._ALIASES:
+    def to_dict(self, omit_none=False, validate=False):
+        dct = self._to_dict()
+        # this is only for connections and should be removed and
+        # handled in connection objects only
+        if hasattr(self, '_ALIASES') and self._ALIASES:
             # TODO : Mutating these dicts is a TERRIBLE idea - remove this
             for aliased_name, canonical_name in self._ALIASES.items():
                 if aliased_name in dct:
@@ -256,17 +257,15 @@ class dbtClassMixin(DataClassDictMixin):
         return dct
 
     @classmethod
-    def from_dict(cls, data, validate=False, with_aliases=False):
-#       if with_aliases:
-        if cls._ALIASES:
-            # TODO : Mutating these dicts is a TERRIBLE idea - remove this
+    def from_dict(cls, data, validate=False):
+        # this is only for connections and should be removed and
+        # handled in connection objects only
+        if hasattr(cls, '_ALIASES') and cls._ALIASES:
             for aliased_name, canonical_name in cls._ALIASES.items():
                 if aliased_name in data:
                     data[canonical_name] = data.pop(aliased_name)
-
-        # TODO .... implement these?
-        # This should return the mashumaro from_dict... hopefully
-        return super().from_dict(data)
+        # mashumaro from_dict method has been renamed to _from_dict
+        return cls._from_dict(data)
 
     @staticmethod
     def _is_json_schema_subclass(field_type: Type) -> bool:

@@ -219,9 +219,8 @@ class Project(dbtClassMixin, Replaceable):
     }
 
     @classmethod
-    def serialize(cls, data, validate=True) -> 'Project':
-        print("-------- in contracts.project Project.from_dict")
-        result = super().serialize(data, validate=validate, with_aliases=True)
+    def from_dict(cls, data, validate=True) -> 'Project':
+        result = super().from_dict(data, validate=validate)
         if result.name in BANNED_PROJECT_NAMES:
             raise ValidationError(
                 f'Invalid project name: {result.name} is a reserved word'
