@@ -40,10 +40,10 @@ class SemverString(str, SerializableType):
 
 @dataclass
 class Quoting(dbtClassMixin, Mergeable):
-    identifier: Optional[bool]
-    schema: Optional[bool]
-    database: Optional[bool]
-    project: Optional[bool]
+    identifier: Optional[bool] = None
+    schema: Optional[bool] = None
+    database: Optional[bool] = None
+    project: Optional[bool] = None
 
 
 @dataclass

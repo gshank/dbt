@@ -591,9 +591,7 @@ class Project:
 
     def validate(self):
         try:
-            # TODO : Jank; need to do this to handle aliasing between hyphens and underscores
-            as_dict = self.to_project_config()
-            ProjectContract.from_dict(as_dict)
+            ProjectContract.from_dict(self.to_project_config())
         except ValidationError as e:
             raise DbtProjectError(validator_error_message(e)) from e
 
