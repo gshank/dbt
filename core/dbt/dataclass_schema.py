@@ -18,6 +18,7 @@ import jsonschema  # type: ignore
 
 from mashumaro import DataClassDictMixin
 from mashumaro.types import SerializableType
+from mashumaro.exceptions import MissingField
 
 JSON_ENCODABLE_TYPES = {
     str: {"type": "string"},
@@ -265,7 +266,11 @@ class dbtClassMixin(DataClassDictMixin):
                 if aliased_name in data:
                     data[canonical_name] = data.pop(aliased_name)
         # mashumaro from_dict method has been renamed to _from_dict
-        return cls._from_dict(data)
+        try: 
+            obj = cls._from_dict(data)
+        except Exception as e:
+            raise ValidationError(str(e))
+        return obj
 
     @staticmethod
     def _is_json_schema_subclass(field_type: Type) -> bool:
