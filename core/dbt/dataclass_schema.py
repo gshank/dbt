@@ -108,6 +108,43 @@ class FieldEncoder(Generic[TV]):
     def json_schema(self) -> JsonDict:
         raise NotImplementedError()
 
+class DateTimeFieldEncoder(FieldEncoder[datetime]):
+    """Encodes datetimes to RFC3339 format"""
+
+    def to_wire(self, value: datetime) -> str:
+        out = value.isoformat()
+
+        # Assume UTC if timezone is missing
+        if value.tzinfo is None:
+            return out + "Z"
+        return out
+
+    def to_python(self, value: JsonEncodable) -> datetime:
+        return (
+            value if isinstance(value, datetime) else parse(cast(str, value))
+        )
+
+    @property
+    def json_schema(self) -> JsonDict:
+        return {"type": "string", "format": "date-time"}
+
+
+class UuidField(FieldEncoder[UUID]):
+    def to_wire(self, value: UUID) -> str:
+        return str(value)
+
+    def to_python(self, value) -> UUID:
+        return UUID(value)
+
+    @property
+    def json_schema(self) -> JsonDict:
+        # 'format': 'uuid' is not valid in "real" JSONSchema
+        return {
+            "type": "string",
+            "pattern": (
+                "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+            ),
+        }
 
 T = TypeVar("T", bound="dbtClassMixin")
 
@@ -229,7 +266,7 @@ class CompleteSchema:
     definitions: JsonDict
 
 
-_DBTCLASS_LOCK = threading.RLock()
+_DBTDCLASS_LOCK = threading.RLock()
 
 
 class dbtClassMixin(DataClassDictMixin):
@@ -237,6 +274,16 @@ class dbtClassMixin(DataClassDictMixin):
        convert to and from JSON encodable dicts with validation
        against the schema
     """
+
+    _field_encoders: Dict[Type, FieldEncoder] = {
+        datetime: DateTimeFieldEncoder(),
+        UUID: UuidField(),
+    }
+    # Cache of the generated schema
+    _schema: Optional[Dict[str, CompleteSchema]] = None
+    _mapped_fields: Optional[Dict[Any, List[Tuple[Field, str]]]] = None
+
+    ADDITIONAL_PROPERTIES = False
 
     def field_mapping(cls) -> Dict[str, str]:
         """Defines the mapping of python field names to JSON field names.
@@ -265,6 +312,10 @@ class dbtClassMixin(DataClassDictMixin):
             for aliased_name, canonical_name in cls._ALIASES.items():
                 if aliased_name in data:
                     data[canonical_name] = data.pop(aliased_name)
+
+        if validate:
+            cls.validate(data)
+
         # mashumaro from_dict method has been renamed to _from_dict
         try: 
             obj = cls._from_dict(data)
@@ -282,6 +333,29 @@ class dbtClassMixin(DataClassDictMixin):
             issubclass_safe(field_type, dbtClassMixin) and
             field_type.__name__ != "PatternProperty"
         )
+
+    @classmethod
+    def _get_fields(cls) -> List[Tuple[Field, str]]:
+        if cls._mapped_fields is None:
+            cls._mapped_fields = {}
+        if cls.__name__ not in cls._mapped_fields:
+            mapped_fields = []
+            type_hints = get_type_hints(cls)
+
+            for f in fields(cls):
+                # Skip internal fields
+                if f.name.startswith("_"):
+                    continue
+
+                # Note fields() doesn't resolve forward refs
+                f.type = type_hints[f.name]
+
+                mapped_fields.append(
+                    (f, cls.field_mapping(cls).get(f.name, f.name))
+                )
+            cls._mapped_fields[cls.__name__] = mapped_fields
+        return cls._mapped_fields[cls.__name__]
+
 
     @classmethod
     def _get_field_meta(cls, field: Field) -> Tuple[FieldMeta, bool]:
@@ -477,6 +551,17 @@ class dbtClassMixin(DataClassDictMixin):
                 )
 
     @classmethod
+    def register_field_encoders(cls, field_encoders: Dict[Type, FieldEncoder]):
+        """Registers additional custom field encoders. If called on
+          the base, these are added globally.
+          The DateTimeFieldEncoder is included by default.
+        """
+        if cls is not dbtClassMixin:
+            cls._field_encoders = {**cls._field_encoders, **field_encoders}
+        else:
+            cls._field_encoders.update(field_encoders)
+
+    @classmethod
     def all_json_schemas(cls) -> JsonDict:
         """Returns JSON schemas for all subclasses"""
         definitions = {}
@@ -647,3 +732,17 @@ class HyphenatedDbtClassMixin(dbtClassMixin):
 
 class ExtensibleDbtClassMixin(dbtClassMixin):
     ADDITIONAL_PROPERTIES = True
+
+def register_pattern(base_type: Type, pattern: str) -> None:
+    """base_type should be a typing.NewType that should always have the given
+    regex pattern. That means that its underlying type ('__supertype__') had
+    better be a str!
+    """
+
+    class PatternEncoder(FieldEncoder):
+        @property
+        def json_schema(self):
+            return {"type": "string", "pattern": pattern}
+
+    dbtClassMixin.register_field_encoders({base_type: PatternEncoder()})
+

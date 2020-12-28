@@ -34,13 +34,16 @@ class BaseRelation(FakeAPIObject, Hashable):
         else:
             return self.path.get_part(field) == value
 
-    @classmethod
-    def _get_field_named(cls, field_name):
-        for field, _ in cls._get_fields():
-            if field.name == field_name:
-                return field
+#  I assume that this was done because of the assumption that there
+#  might be a different default quote_policy for different adapters.
+#  Unless I'm missing something, I'm not seeing that though.
+#   @classmethod
+#   def _get_field_named(cls, field_name):
+#       for field, _ in cls._get_fields():
+#           if field.name == field_name:
+#               return field
         # this should be unreachable
-        raise ValueError(f'BaseRelation has no {field_name} field!')
+#       raise ValueError(f'BaseRelation has no {field_name} field!')
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -49,11 +52,8 @@ class BaseRelation(FakeAPIObject, Hashable):
 
     @classmethod
     def get_default_quote_policy(cls) -> Policy:
-        return cls._get_field_named('quote_policy').default
-
-    @classmethod
-    def get_default_include_policy(cls) -> Policy:
-        return cls._get_field_named('include_policy').default
+#       return cls._get_field_named('quote_policy').default
+        return Policy()
 
     def get(self, key, default=None):
         """Override `.get` to return a metadata object so we don't break

@@ -8,7 +8,8 @@ from dbt import ui
 from dbt.dataclass_schema import (
     dbtClassMixin, ValidationError,
     HyphenatedDbtClassMixin,
-    ExtensibleDbtClassMixin
+    ExtensibleDbtClassMixin,
+    register_pattern
 )
 
 from dataclasses import dataclass, field
@@ -24,9 +25,9 @@ class Name(ValidatedStringMixin):
     ValidationRegex = r'^[^\d\W]\w*$'
 
 
-# this does not support the full semver (does not allow a trailing -fooXYZ) and
-# is not restrictive enough for full semver, (allows '1.0'). But it's like
-# 'semver lite'.
+register_pattern(Name, r'^[^\d\W]\w*$')
+
+
 class SemverString(str, SerializableType):
     def _serialize(self) -> str:
         return self
@@ -35,6 +36,14 @@ class SemverString(str, SerializableType):
     def _deserialize(cls, value: str) -> 'SemverString':
         return SemverString(value)
 
+
+# this does not support the full semver (does not allow a trailing -fooXYZ) and
+# is not restrictive enough for full semver, (allows '1.0'). But it's like
+# 'semver lite'.
+register_pattern(
+    SemverString,
+    r'^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(\.(?:0|[1-9]\d*))?$',
+)
 
 
 
@@ -266,6 +275,7 @@ class ConfiguredQuoting(Quoting, Replaceable):
     database: Optional[bool]
     project: Optional[bool]
 
+ConfiguredQuotingOrDict= Union[ConfiguredQuoting, Dict[str, Any]]
 
 @dataclass
 class Configuration(Project, ProfileConfig):
@@ -273,7 +283,7 @@ class Configuration(Project, ProfileConfig):
         default_factory=dict,
         metadata={'preserve_underscore': True},
     )
-    quoting: Optional[ConfiguredQuoting] = None
+    quoting: Optional[ConfiguredQuotingOrDict] = None
 
 
 @dataclass
