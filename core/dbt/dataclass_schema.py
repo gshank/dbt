@@ -268,6 +268,9 @@ class CompleteSchema:
 
 _DBTDCLASS_LOCK = threading.RLock()
 
+_ValueEncoder = Callable[[Any, Any, bool], Any]
+_ValueDecoder = Callable[[str, Any, Any], Any]
+
 
 class dbtClassMixin(DataClassDictMixin):
     """Mixin which adds methods to generate a JSON schema and
@@ -281,10 +284,14 @@ class dbtClassMixin(DataClassDictMixin):
     }
     # Cache of the generated schema
     _schema: Optional[Dict[str, CompleteSchema]] = None
+    # Cache of field encode / decode functions
+    _encode_cache: Optional[Dict[Any, _ValueEncoder]] = None
+    _decode_cache: Optional[Dict[Any, _ValueDecoder]] = None
     _mapped_fields: Optional[Dict[Any, List[Tuple[Field, str]]]] = None
 
     ADDITIONAL_PROPERTIES = False
 
+    @classmethod
     def field_mapping(cls) -> Dict[str, str]:
         """Defines the mapping of python field names to JSON field names.
 
@@ -351,7 +358,7 @@ class dbtClassMixin(DataClassDictMixin):
                 f.type = type_hints[f.name]
 
                 mapped_fields.append(
-                    (f, cls.field_mapping(cls).get(f.name, f.name))
+                    (f, cls.field_mapping().get(f.name, f.name))
                 )
             cls._mapped_fields[cls.__name__] = mapped_fields
         return cls._mapped_fields[cls.__name__]
@@ -549,6 +556,123 @@ class dbtClassMixin(DataClassDictMixin):
                         embeddable=True, definitions=definitions
                     )
                 )
+
+    @classmethod
+    def _encode_field(
+        cls, field_type: Any, value: Any, omit_none: bool
+    ) -> Any:
+        if value is None:
+            return value
+        try:
+            encoder = cls._encode_cache[field_type]  # type: ignore
+        except (KeyError, TypeError):
+            if cls._encode_cache is None:
+                cls._encode_cache = {}
+
+            field_type_name = cls._get_field_type_name(field_type)
+            if field_type in cls._field_encoders:
+
+                def encoder(ft, v, __):
+                    return cls._field_encoders[ft].to_wire(v)
+
+            elif is_enum(field_type):
+
+                def encoder(_, v, __):
+                    return v.value
+
+            elif field_type_name in OPTIONAL_TYPES:
+                # Attempt to encode the field with each union variant.
+                # TODO: Find a more reliable method than this since in the
+                # case 'Union[List[str], Dict[str, int]]' this
+                # will just output the dict keys as a list
+                union_fields = get_union_fields(field_type)
+                for variant, restrict_fields in union_fields:
+                    if _encode_restrictions_met(value, restrict_fields):
+                        try:
+                            encoded = cls._encode_field(
+                                variant, value, omit_none
+                            )
+                            break
+                        except (TypeError, AttributeError):
+                            continue
+
+                if encoded is None:
+                    raise TypeError(
+                        "No variant of '{}' matched the type '{}'".format(
+                            field_type, type(value)
+                        )
+                    )
+                return encoded
+            elif field_type_name in ("Mapping", "Dict"):
+
+                def encoder(ft, val, o):
+                    return {
+                        cls._encode_field(
+                            ft.__args__[0], k, o
+                        ): cls._encode_field(ft.__args__[1], v, o)
+                        for k, v in val.items()
+                    }
+
+            elif field_type_name == "PatternProperty":
+                # TODO: is there some way to set __args__ on this so it can
+                # just re-use Dict/Mapping?
+                def encoder(ft, val, o):
+
+                    return {
+                        cls._encode_field(str, k, o): cls._encode_field(
+                            ft.TARGET_TYPE, v, o
+                        )
+                        for k, v in val.items()
+                    }
+
+            elif field_type_name == "List" or (
+                field_type_name == "Tuple" and ... in field_type.__args__
+            ):
+
+                def encoder(ft, val, o):
+                    if not isinstance(val, (tuple, list)):
+                        valtype = type(val)  # noqa: F841
+                        # raise a TypeError so the union encoder will capture
+                        raise TypeError(
+                            f"Invalid type, expected {field_type_name} "
+                            "but got {valtype}"
+                        )
+                    return [
+                        cls._encode_field(ft.__args__[0], v, o) for v in val
+                    ]
+
+            elif field_type_name == "Sequence":
+
+                def encoder(ft, val, o):
+                    return [
+                        cls._encode_field(ft.__args__[0], v, o) for v in val
+                    ]
+
+            elif field_type_name == "Tuple":
+
+                def encoder(ft, val, o):
+                    return [
+                        cls._encode_field(ft.__args__[idx], v, o)
+                        for idx, v in enumerate(val)
+                    ]
+
+            elif cls._is_json_schema_subclass(field_type):
+                # Only need to validate at the top level
+                def encoder(_, v, o):
+                    return v.to_dict(omit_none=o, validate=False)
+
+            elif hasattr(field_type, "__supertype__"):  # NewType field
+
+                def encoder(ft, v, o):
+                    return cls._encode_field(ft.__supertype__, v, o)
+
+            else:
+
+                def encoder(_, v, __):
+                    return v
+
+            cls._encode_cache[field_type] = encoder  # type: ignore
+        return encoder(field_type, value, omit_none)
 
     @classmethod
     def register_field_encoders(cls, field_encoders: Dict[Type, FieldEncoder]):
