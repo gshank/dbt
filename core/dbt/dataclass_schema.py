@@ -290,6 +290,7 @@ class dbtClassMixin(DataClassDictMixin):
     _mapped_fields: Optional[Dict[Any, List[Tuple[Field, str]]]] = None
 
     ADDITIONAL_PROPERTIES = False
+    _hyphenated = False
 
     @classmethod
     def field_mapping(cls) -> Dict[str, str]:
@@ -303,11 +304,20 @@ class dbtClassMixin(DataClassDictMixin):
         dct = self._to_dict()
         # this is only for connections and should be removed and
         # handled in connection objects only
-        if hasattr(self, '_ALIASES') and self._ALIASES:
-            # TODO : Mutating these dicts is a TERRIBLE idea - remove this
-            for aliased_name, canonical_name in self._ALIASES.items():
-                if aliased_name in dct:
-                    dct[canonical_name] = dct.pop(aliased_name)
+#       if hasattr(self, '_ALIASES') and self._ALIASES:
+#           # TODO : Mutating these dicts is a TERRIBLE idea - remove this
+#           for aliased_name, canonical_name in self._ALIASES.items():
+#               if aliased_name in dct:
+#                   dct[canonical_name] = dct.pop(aliased_name)
+        if self._hyphenated:
+            new_dict = {}
+            for key in dct:
+                if '_' in key:
+                    new_key = key.replace('_', '-')
+                    new_dict[new_key] = data[key]
+                else:
+                    new_dict[key] = data[key]
+            dct = new_dict
 
         return dct
 
@@ -315,13 +325,24 @@ class dbtClassMixin(DataClassDictMixin):
     def from_dict(cls, data, validate=False):
         # this is only for connections and should be removed and
         # handled in connection objects only
-        if hasattr(cls, '_ALIASES') and cls._ALIASES:
-            for aliased_name, canonical_name in cls._ALIASES.items():
-                if aliased_name in data:
-                    data[canonical_name] = data.pop(aliased_name)
-
+#       if hasattr(cls, '_ALIASES') and cls._ALIASES:
+#           for aliased_name, canonical_name in cls._ALIASES.items():
+#               if aliased_name in data:
+#                   data[canonical_name] = data.pop(aliased_name)
         if validate:
             cls.validate(data)
+
+        if cls._hyphenated:
+            new_dict = {}
+            for key in data:
+                if '-' in key:
+                    new_key = key.replace('-', '_')
+                    new_dict[new_key] = data[key]
+                else:
+                    new_dict[key] = data[key]
+            data = new_dict
+
+
 
         # mashumaro from_dict method has been renamed to _from_dict
         try: 
@@ -841,6 +862,9 @@ def StrLiteral(value: str) -> Type[StrEnum]:
 
 
 class HyphenatedDbtClassMixin(dbtClassMixin):
+    # used by from_dict/to_dict
+    _hyphenated = True
+    # used by former hologram json schema
     @classmethod
     def field_mapping(cls):
         result = {}
@@ -869,4 +893,6 @@ def register_pattern(base_type: Type, pattern: str) -> None:
             return {"type": "string", "pattern": pattern}
 
     dbtClassMixin.register_field_encoders({base_type: PatternEncoder()})
+
+
 

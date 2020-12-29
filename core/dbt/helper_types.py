@@ -10,8 +10,6 @@ from dbt.dataclass_schema import (
 )
 from mashumaro.types import SerializableType
 
-Port = NewType('Port', int)
-
 class Port(int, SerializableType):
     @classmethod
     def _deserialize(cls, value: Union[int, str]) -> 'Port':
@@ -30,7 +28,6 @@ class PortEncoder(FieldEncoder):
     @property
     def json_schema(self):
         return {'type': 'integer', 'minimum': 0, 'maximum': 65535}
-
 
 class TimeDeltaFieldEncoder(FieldEncoder[timedelta]):
     """Encodes timedeltas to dictionaries"""
@@ -85,11 +82,12 @@ class NoValue(dbtClassMixin):
     novalue: NVEnum = NVEnum.novalue
 
 
-#dbtClassMixin.register_field_encoders({
-#    Port: PortEncoder(),
-#    timedelta: TimeDeltaFieldEncoder(),
-#    Path: PathEncoder(),
-#})
+dbtClassMixin.register_field_encoders({
+    Port: PortEncoder(),
+    timedelta: TimeDeltaFieldEncoder(),
+    Path: PathEncoder(),
+})
+
 
 
 FQNPath = Tuple[str, ...]
