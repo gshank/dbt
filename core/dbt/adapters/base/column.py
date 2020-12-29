@@ -7,8 +7,9 @@ from dbt.exceptions import RuntimeException
 from typing import Dict, ClassVar, Any, Optional
 
 
+# TODO: does this need dbtClassMixin?
 @dataclass
-class Column(dbtClassMixin):
+class Column:
     TYPE_LABELS: ClassVar[Dict[str, str]] = {
         'STRING': 'TEXT',
         'TIMESTAMP': 'TIMESTAMP',

@@ -19,6 +19,7 @@ from dbt.adapters.base.query_headers import MacroQueryStringSetter
 from dbt.clients import agate_helper
 import dbt.exceptions
 from dbt.logger import GLOBAL_LOGGER as logger  # noqa
+from dbt.context.providers import RuntimeConfigObject
 
 import google.cloud.bigquery
 
@@ -660,7 +661,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "date",
-                "granularity": "day"
+                "granularity": "day",
+                "range": None,
             }
         )
 
@@ -671,7 +673,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "date",
-                "granularity": "day"
+                "granularity": "day",
+                "range": None,
             }
         )
 
@@ -684,7 +687,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "date",
-                "granularity": "MONTH"
+                "granularity": "MONTH",
+                "range": None,
             }
         )
         
@@ -697,7 +701,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "date",
-                "granularity": "YEAR"
+                "granularity": "YEAR",
+                "range": None,
             }
         )
 
@@ -710,7 +715,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "timestamp",
-                "granularity": "HOUR"
+                "granularity": "HOUR",
+                "range": None,
             }
         )
 
@@ -723,7 +729,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "timestamp",
-                "granularity": "MONTH"
+                "granularity": "MONTH",
+                "range": None,
             }
         )
 
@@ -736,20 +743,22 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "timestamp",
-                "granularity": "YEAR"
+                "granularity": "YEAR",
+                "range": None,
             }
         )
 
         self.assertEqual(
             adapter.parse_partition_by({
-                "field": "ts",
-                "data_type": "datetime",
-                "granularity": "HOUR"
-
-            }).to_dict(), {
                 "field": "ts",
                 "data_type": "datetime",
                 "granularity": "HOUR"
+
+            }).to_dict(), {
+                "field": "ts",
+                "data_type": "datetime",
+                "granularity": "HOUR",
+                "range": None,
             }
         )
 
@@ -762,7 +771,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "datetime",
-                "granularity": "MONTH"
+                "granularity": "MONTH",
+                "range": None,
             }
         )
 
@@ -775,7 +785,8 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
             }).to_dict(), {
                 "field": "ts",
                 "data_type": "datetime",
-                "granularity": "YEAR"
+                "granularity": "YEAR",
+                "range": None,
             }
         )
 
@@ -808,7 +819,7 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
     def test_hours_to_expiration(self):
         adapter = self.get_adapter('oauth')
         mock_config = create_autospec(
-            dbt.context.providers.RuntimeConfigObject)
+            RuntimeConfigObject)
         config = {'hours_to_expiration': 4}
         mock_config.get.side_effect = lambda name: config.get(name)
 
@@ -822,7 +833,7 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
     def test_hours_to_expiration_temporary(self):
         adapter = self.get_adapter('oauth')
         mock_config = create_autospec(
-            dbt.context.providers.RuntimeConfigObject)
+            RuntimeConfigObject)
         config={'hours_to_expiration': 4}
         mock_config.get.side_effect = lambda name: config.get(name)
 

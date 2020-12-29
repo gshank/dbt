@@ -24,8 +24,9 @@ class QueueMessageType(StrEnum):
     terminating = frozenset((Error, Result, Timeout))
 
 
+# TODO: removed dbtClassMixin here... what does this need?
 @dataclass
-class QueueMessage(dbtClassMixin):
+class QueueMessage:
     message_type: QueueMessageType
 
 
