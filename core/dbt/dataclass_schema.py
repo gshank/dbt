@@ -847,18 +847,21 @@ class ValidatedStringMixin(str, SerializableType):
         if res is None:
             raise ValidationError(f"Invalid value: {value}") # TODO
 
-class StrEnum(str, Enum):
-    def __str__(self) -> str:
+# These classes must be in this order or it doesn't work
+class StrEnum(str, SerializableType, Enum):
+    def __str__(self):
         return self.value
 
     # https://docs.python.org/3.6/library/enum.html#using-automatic-values
-    def _generate_next_value_(name, start, count, last_values):
+    def _generate_next_value_(name, *_):
         return name
 
+    def _serialize(self) -> str:
+        return self.value
 
-def StrLiteral(value: str) -> Type[StrEnum]:
-    # mypy doesn't think this works, but it does
-    return StrEnum(value, value)  # type: ignore
+    @classmethod
+    def _deserialize(cls, value: str):
+        return cls(value)
 
 
 class HyphenatedDbtClassMixin(dbtClassMixin):

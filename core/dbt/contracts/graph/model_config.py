@@ -11,6 +11,7 @@ import jsonschema  # type: ignore
 
 from dbt.dataclass_schema import (
     _validate_schema, dbtClassMixin, ValidationError, StrEnum,
+    register_pattern,
 )
 from mashumaro.types import SerializableType
 
@@ -170,16 +171,12 @@ def insensitive_patterns(*patterns: str):
 
 
 
-class Severity(str, SerializableType):
-    @classmethod
-    def _deserialize(cls, value: str) -> 'Severity':
-        # TODO : Validate here?
-        return Severity(value)
+class Severity(str):
+    pass
 
-    def _serialize(self) -> str:
-        # TODO : Validate here?
-        return self
 
+
+register_pattern(Severity, insensitive_patterns('warn', 'error'))
 
 
 class SnapshotStrategy(StrEnum):
