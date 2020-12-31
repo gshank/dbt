@@ -300,15 +300,10 @@ class dbtClassMixin(DataClassDictMixin):
         """
         return {}
 
-    def to_dict(self, omit_none=False, validate=False):
+    def to_dict(
+        self, omit_none: bool = True, validate: bool = False
+    ):
         dct = self._to_dict()
-        # this is only for connections and should be removed and
-        # handled in connection objects only
-#       if hasattr(self, '_ALIASES') and self._ALIASES:
-#           # TODO : Mutating these dicts is a TERRIBLE idea - remove this
-#           for aliased_name, canonical_name in self._ALIASES.items():
-#               if aliased_name in dct:
-#                   dct[canonical_name] = dct.pop(aliased_name)
         if self._hyphenated:
             new_dict = {}
             for key in dct:
@@ -319,16 +314,15 @@ class dbtClassMixin(DataClassDictMixin):
                     new_dict[key] = data[key]
             dct = new_dict
 
+        if omit_none:
+            new_dict = {k: v for k, v in dct.items() if v is not None}
+            dct = new_dict
+
         return dct
 
     @classmethod
     def from_dict(cls, data, validate=False):
-        # this is only for connections and should be removed and
-        # handled in connection objects only
-#       if hasattr(cls, '_ALIASES') and cls._ALIASES:
-#           for aliased_name, canonical_name in cls._ALIASES.items():
-#               if aliased_name in data:
-#                   data[canonical_name] = data.pop(aliased_name)
+
         if validate:
             cls.validate(data)
 
@@ -341,8 +335,6 @@ class dbtClassMixin(DataClassDictMixin):
                 else:
                     new_dict[key] = data[key]
             data = new_dict
-
-
 
         # mashumaro from_dict method has been renamed to _from_dict
         try: 

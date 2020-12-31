@@ -21,12 +21,12 @@ Self = TypeVar('Self', bound='BaseRelation')
 
 @dataclass(frozen=True, eq=False, repr=False)
 class BaseRelation(FakeAPIObject, Hashable):
-    type: Optional[RelationType]
     path: Path
     quote_character: str = '"'
     include_policy: Policy = Policy()
     quote_policy: Policy = Policy()
     dbt_created: bool = False
+    type: Optional[RelationType] = None
 
     def _is_exactish_match(self, field: ComponentName, value: str) -> bool:
         if self.dbt_created and self.quote_policy.get_part(field) is False:

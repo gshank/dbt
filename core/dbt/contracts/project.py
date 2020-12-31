@@ -49,10 +49,10 @@ register_pattern(
 
 @dataclass
 class Quoting(dbtClassMixin, Mergeable):
-    identifier: Optional[bool] = None
     schema: Optional[bool] = None
     database: Optional[bool] = None
     project: Optional[bool] = None
+    identifier: Optional[bool] = None
 
 
 @dataclass
@@ -72,7 +72,7 @@ RawVersion = Union[str, float]
 @dataclass
 class GitPackage(Package):
     git: str
-    revision: Optional[RawVersion]
+    revision: Optional[RawVersion] = None
     warn_unpinned: Optional[bool] = None
 
     def get_revisions(self) -> List[str]:

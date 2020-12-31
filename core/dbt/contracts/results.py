@@ -112,7 +112,11 @@ class ExecutionResult(dbtClassMixin):
         return self.results[idx]
 
 
-RunResult = Union[PartialResult, WritableRunModelResult]
+# TODO: This replaced a Union of PartialResult and WritableRunModelResult
+# It's not clear to my why there were different classes. The only difference
+# was in the 'skipped' method and 'skip' attribute
+class RunResult(WritableRunModelResult):
+    pass
 
 
 @dataclass
