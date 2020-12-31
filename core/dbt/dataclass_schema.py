@@ -303,19 +303,24 @@ class dbtClassMixin(DataClassDictMixin):
     def to_dict(
         self, omit_none: bool = True, validate: bool = False
     ):
-        dct = self._to_dict()
+        dct = self._to_dict(omit_none=omit_none)
+        return dct
+
+    # TODO: can we remove the 'do_dict' method in this file?
+    # this is called by the mashumaro to_dict
+    def post_to_dict(self, dct, omit_none):
+        if omit_none:
+            new_dict = {k: v for k, v in dct.items() if v is not None}
+            dct = new_dict
+
         if self._hyphenated:
             new_dict = {}
             for key in dct:
                 if '_' in key:
                     new_key = key.replace('_', '-')
-                    new_dict[new_key] = data[key]
+                    new_dict[new_key] = dct[key]
                 else:
-                    new_dict[key] = data[key]
-            dct = new_dict
-
-        if omit_none:
-            new_dict = {k: v for k, v in dct.items() if v is not None}
+                    new_dict[key] = dct[key]
             dct = new_dict
 
         return dct

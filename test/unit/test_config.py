@@ -738,9 +738,7 @@ class TestProject(BaseConfigTest):
         self.assertEqual(project.clean_targets, ['another-target'])
         self.assertEqual(project.log_path, 'other-logs')
         self.assertEqual(project.modules_path, 'other-dbt_modules')
-        # TODO: changed this test. These are defaults, so it seems like it should be okay,
-        # and I've gone around and around on the quoting thing
-        self.assertEqual(project.quoting, {'identifier': False, 'schema': None, 'database': None, 'project': None})
+        self.assertEqual(project.quoting, {'identifier': False})
         self.assertEqual(project.models, {
             'pre-hook': ['{{ logging.log_model_start_event() }}'],
             'post-hook': ['{{ logging.log_model_end_event() }}'],

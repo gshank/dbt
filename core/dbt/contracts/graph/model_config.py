@@ -437,14 +437,19 @@ class NodeConfig(BaseConfig):
     # not have validate=True, but there's a test requiring it
     @classmethod
     def from_dict(cls, data, validate=True):
+        field_map = {'post-hook': 'post_hook', 'pre-hook': 'pre_hook'}
         for key in hooks.ModelHookType:
             if key in data:
-                data[key] = [hooks.get_hook_dict(h) for h in data[key]]
+                data[field_map[key]] = [hooks.get_hook_dict(h) for h in data[key]]
         return super().from_dict(data, validate=validate)
 
-    @classmethod
-    def field_mapping(cls):
-        return {'post_hook': 'post-hook', 'pre_hook': 'pre-hook'}
+    def post_to_dict(self, dct, omit_none):
+        dct = super().post_to_dict(dct, omit_none)
+        field_map = {'post_hook': 'post-hook', 'pre_hook': 'pre-hook'}
+        for field_name in field_map:
+            if field_name in dct:
+                dct[field_map[field_name]] = dct.pop(field_name)
+        return dct
 
 
 @dataclass
