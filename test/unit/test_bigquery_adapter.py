@@ -662,7 +662,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "date",
                 "granularity": "day",
-                "range": None,
             }
         )
 
@@ -674,7 +673,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "date",
                 "granularity": "day",
-                "range": None,
             }
         )
 
@@ -688,7 +686,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "date",
                 "granularity": "MONTH",
-                "range": None,
             }
         )
         
@@ -702,7 +699,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "date",
                 "granularity": "YEAR",
-                "range": None,
             }
         )
 
@@ -716,7 +712,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "timestamp",
                 "granularity": "HOUR",
-                "range": None,
             }
         )
 
@@ -730,7 +725,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "timestamp",
                 "granularity": "MONTH",
-                "range": None,
             }
         )
 
@@ -744,7 +738,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "timestamp",
                 "granularity": "YEAR",
-                "range": None,
             }
         )
 
@@ -758,7 +751,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "datetime",
                 "granularity": "HOUR",
-                "range": None,
             }
         )
 
@@ -772,7 +764,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "datetime",
                 "granularity": "MONTH",
-                "range": None,
             }
         )
 
@@ -786,7 +777,6 @@ class TestBigQueryAdapter(BaseTestBigQueryAdapter):
                 "field": "ts",
                 "data_type": "datetime",
                 "granularity": "YEAR",
-                "range": None,
             }
         )
 
