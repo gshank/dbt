@@ -45,7 +45,7 @@ from dbt.contracts.graph.unparsed import (
 from dbt import flags
 
 from dbt.dataclass_schema import ValidationError
-from .utils import ContractTestCase, assert_symmetric, assert_from_dict, assert_fails_validation, dict_replace, replace_config
+from .utils import ContractTestCase, assert_symmetric, assert_from_dict, assert_to_dict, assert_fails_validation, dict_replace, replace_config
 
 
 @pytest.fixture(autouse=True)
@@ -724,7 +724,7 @@ def test_patch_parsed_model(basic_parsed_model_object, basic_parsed_model_patch_
 
 
 def test_patch_parsed_model_invalid(basic_parsed_model_object, basic_parsed_model_patch_object):
-    pre_patch = basic_parsed_model_object
+    pre_patch = basic_parsed_model_object # ParsedModelNode
     patch = basic_parsed_model_patch_object.replace(description=None)
     with pytest.raises(ValidationError):
         pre_patch.patch(patch)
@@ -1144,7 +1144,9 @@ def test_basic_schema_test_node(minimal_parsed_schema_test_dict, basic_parsed_sc
 
 
 def test_complex_schema_test_node(complex_parsed_schema_test_dict, complex_parsed_schema_test_object):
-    node = complex_parsed_schema_test_object
+    # this tests for the presence of _extra keys
+    node = complex_parsed_schema_test_object  # ParsedSchemaTestNode
+    assert(node.config._extra['extra_key'])
     node_dict = complex_parsed_schema_test_dict
     assert_symmetric(node, node_dict)
     assert node.empty is False

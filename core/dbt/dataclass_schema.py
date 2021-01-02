@@ -400,6 +400,15 @@ class dbtClassMixin(DataClassDictMixin):
             cls._mapped_fields[cls.__name__] = mapped_fields
         return cls._mapped_fields[cls.__name__]
 
+    @classmethod
+    def _get_field_names(cls):
+        fields = cls._get_fields()
+        field_names = []
+        for element in fields:
+            field_names.append(element[1])
+        return field_names
+
+
 
     @classmethod
     def _get_field_meta(cls, field: Field) -> Tuple[FieldMeta, bool]:

@@ -69,17 +69,27 @@ class AdditionalPropertiesMixin:
     """
     ADDITIONAL_PROPERTIES = True
 
+    # This takes attributes in the dictionary that are
+    # not in the class definitions and puts them in an
+    # _extra dict in the class
     @classmethod
-    def from_dict(cls, data, validate=True):
-        self = super().from_dict(data=data, validate=validate)
-        keys = self.to_dict(omit_none=False)
+    def before_from_dict(cls, data):
+        # dir() did not work because fields with
+        # metadata settings are not found
+        cls_keys = cls._get_field_names()
+        extra = {}
         for key, value in data.items():
-            if (key not in keys and key not in ('pre_hook', 'post_hook')):
-                self.extra[key] = value
+            if key not in cls_keys:
+                extra[key] = data[key]
+        if extra:
+            for key in extra:
+                del data[key]
+            data['_extra'] = extra
+        self = super().before_from_dict(data)
         return self
 
-    def to_dict(self, omit_none=True):
-        data = super().to_dict(omit_none=omit_none)
+    def after_to_dict(self, dct, omit_none=True):
+        data = super().after_to_dict(dct, omit_none)
         data.update(self.extra)
         return data
 

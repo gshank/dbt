@@ -133,8 +133,12 @@ class ParsedNodeMixins(dbtClassMixin):
         self.meta = patch.meta
         self.docs = patch.docs
         if flags.STRICT_MODE:
+            # TODO: seems odd that an instance can be invalid
+            # Maybe there should be validation or restrictions
+            # elsewhere?
             assert isinstance(self, dbtClassMixin)
-            self.to_dict(omit_none=False)
+            dct = self.to_dict(omit_none=False)
+            self.validate(dct)
 
     def get_materialization(self):
         return self.config.materialized
