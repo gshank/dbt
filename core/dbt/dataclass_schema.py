@@ -302,7 +302,7 @@ class dbtClassMixin(DataClassDictMixin):
     # This is called by the mashumaro to_dict in order to handle
     # nested classes.
     # Munges the dict that's returned.
-    # TODO: Q: should omit_none be implemented by class variabl
+    # TODO: Q: should omit_none be implemented by class variable
     # like _hyphenated?
     def after_to_dict(self, dct, omit_none):
         if omit_none:
@@ -318,6 +318,11 @@ class dbtClassMixin(DataClassDictMixin):
                 else:
                     new_dict[key] = dct[key]
             dct = new_dict
+
+        # TODO: This is a hack to match the to_dict datetimes
+        # produced by hologram. Do something better.
+        if 'generated_at' in dct:
+            dct['generated_at'] = dct['generated_at'] + 'Z'
 
         return dct
 
