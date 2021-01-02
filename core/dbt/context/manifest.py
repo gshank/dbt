@@ -55,8 +55,8 @@ class ManifestContext(ConfiguredContext):
             None,
         )
 
-    def to_dict(self):
-        dct = super().to_dict()
+    # converted from 'to_dict' method; called by mashumaro _to_dict
+    def after_to_dict(self, dct, omit_none):
         # This moves all of the macros in the 'namespace' into top level
         # keys in the manifest dictionary
         if isinstance(self.namespace, TestMacroNamespace):

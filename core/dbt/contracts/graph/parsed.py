@@ -134,7 +134,7 @@ class ParsedNodeMixins(dbtClassMixin):
         self.docs = patch.docs
         if flags.STRICT_MODE:
             assert isinstance(self, dbtClassMixin)
-            self.to_dict(validate=True, omit_none=False)
+            self.to_dict(omit_none=False)
 
     def get_materialization(self):
         return self.config.materialized
@@ -337,9 +337,9 @@ class ParsedSeedNode(ParsedNode):
 
 @dataclass
 class TestMetadata(dbtClassMixin, Replaceable):
-    namespace: Optional[str]
     name: str
-    kwargs: Dict[str, Any]
+    kwargs: Dict[str, Any] = field(default_factory=dict)
+    namespace: Optional[str] = None
 
 
 @dataclass
@@ -445,7 +445,7 @@ class ParsedMacro(UnparsedBaseNode, HasUniqueID):
         self.arguments = patch.arguments
         if flags.STRICT_MODE:
             assert isinstance(self, dbtClassMixin)
-            self.to_dict(validate=True, omit_none=False)
+            self.to_dict(omit_none=False)
 
     def same_contents(self, other: Optional['ParsedMacro']) -> bool:
         if other is None:

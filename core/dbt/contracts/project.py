@@ -207,6 +207,8 @@ class Project(HyphenatedDbtClassMixin, Replaceable):
     packages: List[PackageSpec] = field(default_factory=list)
     query_comment: Optional[Union[QueryComment, NoValue, str]] = NoValue()
 
+    # TODO: check where this is used and if it's an issue that it
+    # doesn't work for nested Project classes 
     @classmethod
     def from_dict(cls, data, validate=True) -> 'Project':
         result = super().from_dict(data, validate=validate)

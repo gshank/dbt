@@ -317,29 +317,6 @@ class BaseConfig(
             )
         return result
 
-    def to_dict(
-        self,
-        omit_none: bool = True,
-        validate: bool = False,
-        *,
-        omit_hidden: bool = True,
-    ) -> Dict[str, Any]:
-        result = super().to_dict(omit_none=omit_none, validate=validate)
-        if omit_hidden and not omit_none:
-            for fld, target_field in self._get_fields():
-                if target_field not in result:
-                    continue
-
-                # if the field is not None, preserve it regardless of the
-                # setting. This is in line with existing behavior, but isn't
-                # an endorsement of it!
-                if result[target_field] is not None:
-                    continue
-
-                if not ShowBehavior.should_show(fld):
-                    del result[target_field]
-        return result
-
     def update_from(
         self: T, data: Dict[str, Any], adapter_type: str, validate: bool = True
     ) -> T:
@@ -348,7 +325,7 @@ class BaseConfig(
         """
         # sadly, this is a circular import
         from dbt.adapters.factory import get_config_class_by_name
-        dct = self.to_dict(omit_none=False, validate=False, omit_hidden=False)
+        dct = self.to_dict(omit_none=False)
 
         adapter_config_cls = get_config_class_by_name(adapter_type)
 
@@ -365,11 +342,11 @@ class BaseConfig(
         return self.from_dict(dct, validate=validate)
 
     def finalize_and_validate(self: T) -> T:
-        dct = self.to_dict(omit_none=False, validate=False)
+        dct = self.to_dict(omit_none=False)
         return self.from_dict(dct, validate=True)
 
     def replace(self, **kwargs):
-        dct = self.to_dict(validate=False)
+        dct = self.to_dict()
 
         mapping = self.field_mapping()
         for key, value in kwargs.items():
@@ -433,18 +410,25 @@ class NodeConfig(BaseConfig):
     )
     full_refresh: Optional[bool] = None
 
-    # This is internal validation, and it would be better to
-    # not have validate=True, but there's a test requiring it
+    # TODO: where is the 'from_dict' call made?
+    # Converted this from a from_dict method to a before_from_dict
+    # method. validate=True removed, must be called explicitly
     @classmethod
-    def from_dict(cls, data, validate=True):
+    def before_from_dict(cls, data):
         field_map = {'post-hook': 'post_hook', 'pre-hook': 'pre_hook'}
         for key in hooks.ModelHookType:
             if key in data:
-                data[field_map[key]] = [hooks.get_hook_dict(h) for h in data[key]]
-        return super().from_dict(data, validate=validate)
+                data[key] = [hooks.get_hook_dict(h) for h in data[key]]
+        for field_name in field_map:
+            if field_name in data:
+                new_name = field_map[field_name]
+                data[new_name] = data.pop(field_name)
+        # Not sure if the order matters here. Do this first or after?
+        data = super().before_from_dict(data)
+        return data
 
-    def post_to_dict(self, dct, omit_none):
-        dct = super().post_to_dict(dct, omit_none)
+    def after_to_dict(self, dct, omit_none):
+        dct = super().after_to_dict(dct, omit_none)
         field_map = {'post_hook': 'post-hook', 'pre_hook': 'pre-hook'}
         for field_name in field_map:
             if field_name in dct:

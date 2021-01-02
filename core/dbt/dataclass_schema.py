@@ -292,23 +292,19 @@ class dbtClassMixin(DataClassDictMixin):
     ADDITIONAL_PROPERTIES = False
     _hyphenated = False
 
-    @classmethod
-    def field_mapping(cls) -> Dict[str, str]:
-        """Defines the mapping of python field names to JSON field names.
-
-        The main use-case is to allow JSON field names which are Python keywords
-        """
-        return {}
-
-    def to_dict(
-        self, omit_none: bool = True, validate: bool = False
-    ):
+    # This will only be called by the current class, not any
+    # nested classes. It doesn't do anything except call the
+    # mashumaro _to_dict, but leaving here for consistency
+    def to_dict( self, omit_none: bool = True):
         dct = self._to_dict(omit_none=omit_none)
         return dct
 
-    # TODO: can we remove the 'do_dict' method in this file?
-    # this is called by the mashumaro to_dict
-    def post_to_dict(self, dct, omit_none):
+    # This is called by the mashumaro to_dict in order to handle
+    # nested classes.
+    # Munges the dict that's returned.
+    # TODO: Q: should omit_none be implemented by class variabl
+    # like _hyphenated?
+    def after_to_dict(self, dct, omit_none):
         if omit_none:
             new_dict = {k: v for k, v in dct.items() if v is not None}
             dct = new_dict
@@ -325,12 +321,27 @@ class dbtClassMixin(DataClassDictMixin):
 
         return dct
 
+    # This will only be called by the current class, not
+    # any nested classes. It performs only validate and
+    # wrapping errors thrown by mashumaro in from_dict.
+    # Any munging of data should be done by 'before_from_dict'
     @classmethod
     def from_dict(cls, data, validate=False):
 
         if validate:
             cls.validate(data)
 
+        # call mashumaro _from_dict method
+        try:
+            obj = cls._from_dict(data)
+        except Exception as e:
+            raise ValidationError(str(e))
+        return obj
+
+    # This is called by the mashumaro _from_dict method, before
+    # performing the conversion to a dict
+    @classmethod
+    def before_from_dict(cls, data):
         if cls._hyphenated:
             new_dict = {}
             for key in data:
@@ -340,13 +351,16 @@ class dbtClassMixin(DataClassDictMixin):
                 else:
                     new_dict[key] = data[key]
             data = new_dict
+        return data
 
-        # mashumaro from_dict method has been renamed to _from_dict
-        try: 
-            obj = cls._from_dict(data)
-        except Exception as e:
-            raise ValidationError(str(e))
-        return obj
+    # TODO: This isn't used much. Remove?
+    @classmethod
+    def field_mapping(cls) -> Dict[str, str]:
+        """Defines the mapping of python field names to JSON field names.
+
+        The main use-case is to allow JSON field names which are Python keywords
+        """
+        return {}
 
     @staticmethod
     def _is_json_schema_subclass(field_type: Type) -> bool:
@@ -677,7 +691,7 @@ class dbtClassMixin(DataClassDictMixin):
             elif cls._is_json_schema_subclass(field_type):
                 # Only need to validate at the top level
                 def encoder(_, v, o):
-                    return v.to_dict(omit_none=o, validate=False)
+                    return v.to_dict(omit_none=o)
 
             elif hasattr(field_type, "__supertype__"):  # NewType field
 

@@ -129,7 +129,7 @@ class Credentials(
     ) -> Iterable[Tuple[str, Any]]:
         """Return an ordered iterator of key/value pairs for pretty-printing.
         """
-        as_dict = self.to_dict(omit_none=False, with_aliases=with_aliases)
+        as_dict = self.to_dict(omit_none=False)
         connection_keys = set(self._connection_keys())
         aliases: List[str] = []
         if with_aliases:
@@ -145,9 +145,9 @@ class Credentials(
         raise NotImplementedError
 
     @classmethod
-    def from_dict(cls, data):
+    def before_from_dict(cls, data):
         data = cls.translate_aliases(data)
-        return super().from_dict(data, validate=True)
+        return data
 
     @classmethod
     def translate_aliases(
@@ -155,15 +155,15 @@ class Credentials(
     ) -> Dict[str, Any]:
         return translate_aliases(kwargs, cls._ALIASES, recurse)
 
-    def to_dict(self, omit_none=True, validate=False, *, with_aliases=False):
-        serialized = super().to_dict(omit_none=omit_none, validate=validate)
-        if with_aliases:
-            serialized.update({
-                new_name: serialized[canonical_name]
+    # TODO: converted to 'after_to_dict'. Ensure that this works.
+    def after_to_dict(self, dct, omit_none):
+        if self._ALIASES:
+            dct.update({
+                new_name: dct[canonical_name]
                 for new_name, canonical_name in self._ALIASES.items()
-                if canonical_name in serialized
+                if canonical_name in dct
             })
-        return serialized
+        return dct
 
 
 class UserConfigContract(Protocol):
@@ -173,11 +173,6 @@ class UserConfigContract(Protocol):
     printer_width: Optional[int]
 
     def set_values(self, cookie_dir: str) -> None:
-        ...
-
-    def to_dict(
-        self, omit_none: bool = True, validate: bool = False
-    ) -> Dict[str, Any]:
         ...
 
 

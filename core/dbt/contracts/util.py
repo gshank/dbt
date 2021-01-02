@@ -72,19 +72,19 @@ class AdditionalPropertiesMixin:
     @classmethod
     def from_dict(cls, data, validate=True):
         self = super().from_dict(data=data, validate=validate)
-        keys = self.to_dict(validate=False, omit_none=False)
+        keys = self.to_dict(omit_none=False)
         for key, value in data.items():
-            if key not in keys:
+            if (key not in keys and key not in ('pre_hook', 'post_hook')):
                 self.extra[key] = value
         return self
 
-    def to_dict(self, omit_none=True, validate=False):
-        data = super().to_dict(omit_none=omit_none, validate=validate)
+    def to_dict(self, omit_none=True):
+        data = super().to_dict(omit_none=omit_none)
         data.update(self.extra)
         return data
 
     def replace(self, **kwargs):
-        dct = self.to_dict(omit_none=False, validate=False)
+        dct = self.to_dict(omit_none=False)
         dct.update(kwargs)
         return self.from_dict(dct)
 
@@ -179,6 +179,9 @@ T = TypeVar('T', bound='ArtifactMixin')
 class ArtifactMixin(VersionedSchema, Writable, Readable):
     metadata: BaseArtifactMetadata
 
+    # TODO: check where this is called and determine if it's an
+    # issue that it won't be called for nested classes
+    # Is there a better place to validate the schema_version?
     @classmethod
     def from_dict(
         cls: Type[T], data: Dict[str, Any], validate: bool = True

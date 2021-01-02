@@ -359,11 +359,11 @@ ColumnMap = Dict[str, ColumnMetadata]
 @dataclass
 class TableMetadata(dbtClassMixin):
     type: str
-    database: Optional[str]
     schema: str
     name: str
-    comment: Optional[str]
-    owner: Optional[str]
+    database: Optional[str] = None
+    comment: Optional[str] = None
+    owner: Optional[str] = None
 
 
 @dataclass

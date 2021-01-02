@@ -236,11 +236,10 @@ class UnparsedSourceTableDefinition(HasColumnTests, HasTests):
     external: Optional[ExternalTable] = None
     tags: List[str] = field(default_factory=list)
 
-    def to_dict(self, omit_none=True, validate=False):
-        result = super().to_dict(omit_none=omit_none, validate=validate)
+    def after_to_dict(self, dct, omit_none):
         if omit_none and self.freshness is None:
-            result['freshness'] = None
-        return result
+            dct['freshness'] = None
+        return dct
 
 
 @dataclass
@@ -263,11 +262,10 @@ class UnparsedSourceDefinition(dbtClassMixin, Replaceable):
     def yaml_key(self) -> 'str':
         return 'sources'
 
-    def to_dict(self, omit_none=True, validate=False):
-        result = super().to_dict(omit_none=omit_none, validate=validate)
+    def after_to_dict(self, dct, omit_none):
         if omit_none and self.freshness is None:
-            result['freshness'] = None
-        return result
+            dct['freshness'] = None
+        return dct
 
 
 @dataclass
