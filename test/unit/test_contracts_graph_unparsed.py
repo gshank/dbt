@@ -174,7 +174,7 @@ class TestFreshnessThreshold(ContractTestCase):
 
     def test_empty(self):
         empty = self.ContractType(None, None)
-        self.assert_symmetric(empty, {'warn_after': None, 'error_after': None, 'filter': None})
+        self.assert_symmetric(empty, {})
         self.assertEqual(empty.status(float('Inf')), FreshnessStatus.Pass)
         self.assertEqual(empty.status(0), FreshnessStatus.Pass)
 
@@ -186,7 +186,6 @@ class TestFreshnessThreshold(ContractTestCase):
         dct = {
             'error_after': {'count': 2, 'period': 'day'},
             'warn_after': {'count': 18, 'period': 'hour'},
-            'filter': None
         }
         self.assert_symmetric(threshold, dct)
 
@@ -225,18 +224,18 @@ class TestQuoting(ContractTestCase):
 
     def test_empty(self):
         empty = self.ContractType()
-        self.assert_symmetric(empty, {'database': None, 'schema': None, 'identifier': None, 'column': None})
+        self.assert_symmetric(empty, {})
 
     def test_partial(self):
         a = self.ContractType(None, True, False)
         b = self.ContractType(True, False, None)
-        self.assert_symmetric(a, {'column': None, 'database': None, 'identifier': False, 'schema': True})
-        self.assert_symmetric(b, {'database': True, 'schema': False, 'identifier': None, 'column': None})
+        self.assert_symmetric(a, {'identifier': False, 'schema': True})
+        self.assert_symmetric(b, {'database': True, 'schema': False})
 
         c = a.merged(b)
         self.assertEqual(c, self.ContractType(True, False, False))
         self.assert_symmetric(
-            c, {'database': True, 'schema': False, 'identifier': False, 'column': None}
+            c, {'database': True, 'schema': False, 'identifier': False}
         )
         pickle.loads(pickle.dumps(c))
 
@@ -248,17 +247,11 @@ class TestUnparsedSourceDefinition(ContractTestCase):
         minimum = self.ContractType(name='foo')
         from_dict = {'name': 'foo'}
         to_dict = {
-            'database': None,
             'name': 'foo',
             'description': '',
-            'freshness': {'error_after': None, 'filter': None, 'warn_after': None},
-            'quoting': {'column': None,
-                        'database': None,
-                        'identifier': None,
-                        'schema': None},
-            'schema': None,
+            'freshness': {},
+            'quoting': {},
             'tables': [],
-            'loaded_at_field': None,
             'loader': '',
             'meta': {},
             'tags': [],
@@ -277,21 +270,14 @@ class TestUnparsedSourceDefinition(ContractTestCase):
             meta={},
         )
         dct = {
-            'database': None,
             'name': 'foo',
             'description': 'a description',
             'quoting': {'database': False},
-            'quoting': {'column': None,
-                'database': False,
-                'identifier': None,
-                'schema': None},
-            'loaded_at_field': None,
             'loader': 'some_loader',
-            'freshness': {'error_after': None, 'filter': None, 'warn_after': None},
+            'freshness': {},
             'tables': [],
             'meta': {},
             'tags': [],
-            'schema': None,
         }
         self.assert_symmetric(empty, dct)
 
@@ -318,16 +304,12 @@ class TestUnparsedSourceDefinition(ContractTestCase):
             ],
         }
         to_dict = {
-            'database': None,
             'name': 'foo',
             'description': '',
             'loader': '',
-            'freshness': {'error_after': None, 'filter': None, 'warn_after': None},
+            'freshness': {},
             'quoting': {},
-            'quoting': {'column': None,
-                        'database': None,
-                        'identifier': None,
-                        'schema': None},
+            'quoting': {},
             'meta': {},
             'tables': [
                 {
@@ -354,50 +336,6 @@ class TestUnparsedSourceDefinition(ContractTestCase):
                 },
             ],
             'tags': [],
-        }
-        to_dict = {
-            'name': 'foo',
-            'description': '',
-            'meta': {},
-            'database': None,
-            'schema': None,
-            'loader': '',
-            'quoting': {'database': None, 'schema': None, 'identifier': None, 'column': None},
-            'freshness': {'warn_after': None, 'error_after': None, 'filter': None},
-            'loaded_at_field': None,
-            'tables': [
-                {
-                    'name': 'table1',
-                    'description': '',
-                    'meta': {},
-                    'data_type': None,
-                    'docs': {'show': True},
-                    'tests': [],
-                    'columns': [],
-                    'loaded_at_field': None,
-                    'identifier': None,
-                    'quoting': {'database': None, 'schema': None, 'identifier': None, 'column': None},
-                    'freshness': {'warn_after': None, 'error_after': None, 'filter': None},
-                    'external': None,
-                    'tags': []
-                },
-                {
-                    'name': 'table2',
-                    'description': 'table 2',
-                    'meta': {},
-                    'data_type': None,
-                    'docs': {'show': True},
-                    'tests': [],
-                    'columns': [],
-                    'loaded_at_field': None,
-                    'identifier': None,
-                    'quoting': {'database': True, 'schema': None, 'identifier': None, 'column': None},
-                    'freshness': {'warn_after': None, 'error_after': None, 'filter': None},
-                    'external': None,
-                    'tags': []
-                }
-            ],
-            'tags': []
         }
 
         self.assert_from_dict(source, from_dict)
@@ -463,12 +401,10 @@ class TestUnparsedNodeUpdate(ContractTestCase):
             'original_file_path': '/some/fake/path',
             'package_name': 'test',
             'columns': [],
-            'data_type': None,
             'description': '',
             'docs': {'show': True},
             'tests': [],
             'meta': {},
-            'quote_columns': None,
         }
         self.assert_from_dict(minimum, from_dict)
         self.assert_to_dict(minimum, to_dict)
@@ -509,8 +445,6 @@ class TestUnparsedNodeUpdate(ContractTestCase):
             'description': 'a description',
             'tests': ['table_test'],
             'meta': {'key': ['value1', 'value2']},
-            'data_type': None,
-            'quote_columns': None,
             'columns': [
                 {
                     'name': 'x',
@@ -519,8 +453,6 @@ class TestUnparsedNodeUpdate(ContractTestCase):
                     'tests': [],
                     'meta': {'key2': 'value3'},
                     'tags': [],
-                    'data_type': None,
-                    'quote': None,
                 },
                 {
                     'name': 'y',
@@ -532,8 +464,6 @@ class TestUnparsedNodeUpdate(ContractTestCase):
                     ],
                     'meta': {},
                     'tags': ['a', 'b'],
-                    'data_type': None,
-                    'quote': None,
                 },
             ],
             'docs': {'show': False},
@@ -652,7 +582,6 @@ class TestUnparsedExposure(ContractTestCase):
             'type': 'dashboard',
             'owner': {
                 'email': 'name@example.com',
-                'name': None,
             },
             'maturity': 'medium',
             'url': 'https://example.com/dashboards/1',

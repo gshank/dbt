@@ -237,6 +237,7 @@ class UnparsedSourceTableDefinition(HasColumnTests, HasTests):
     tags: List[str] = field(default_factory=list)
 
     def after_to_dict(self, dct, omit_none):
+        dct = super().after_to_dict(dct, omit_none)
         if omit_none and self.freshness is None:
             dct['freshness'] = None
         return dct
@@ -263,6 +264,7 @@ class UnparsedSourceDefinition(dbtClassMixin, Replaceable):
         return 'sources'
 
     def after_to_dict(self, dct, omit_none):
+        dct = super().after_to_dict(dct, omit_none)
         if omit_none and self.freshness is None:
             dct['freshness'] = None
         return dct
