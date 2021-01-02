@@ -416,6 +416,12 @@ class NodeConfig(BaseConfig):
     @classmethod
     def before_from_dict(cls, data):
         field_map = {'post-hook': 'post_hook', 'pre-hook': 'pre_hook'}
+        # create a new dict because otherwise it gets overwritten in
+        # tests
+        new_dict = {}
+        for key in data:
+            new_dict[key] = data[key]
+        data = new_dict
         for key in hooks.ModelHookType:
             if key in data:
                 data[key] = [hooks.get_hook_dict(h) for h in data[key]]
