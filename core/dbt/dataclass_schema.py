@@ -340,7 +340,8 @@ class dbtClassMixin(DataClassDictMixin):
         try:
             obj = cls._from_dict(data)
         except Exception as e:
-            raise ValidationError(str(e))
+            message = f"{cls.__name__}: {str(e)}"
+            raise ValidationError(message)
         return obj
 
     # This is called by the mashumaro _from_dict method, before

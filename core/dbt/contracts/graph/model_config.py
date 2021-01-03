@@ -514,6 +514,18 @@ class SnapshotConfig(EmptySnapshotConfig):
             fields.append((new_field, name))
         return fields
 
+    @classmethod
+    def before_from_dict(cls, dct):
+        dct = super().before_from_dict(dct)
+        # This is because there aren't defaults for these
+        # TODO: figure out how to put defaults on these fields
+        if 'unique_key' not in dct:
+            dct['unique_key'] = None
+        if 'target_schema' not in dct:
+            dct['target_schema'] = None
+        return dct
+
+
     def finalize_and_validate(self: 'SnapshotConfig') -> SnapshotVariants:
         data = self.to_dict()
         return SnapshotWrapper.from_dict(
