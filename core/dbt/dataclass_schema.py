@@ -293,11 +293,39 @@ class dbtClassMixin(DataClassDictMixin):
     _hyphenated = False
 
     # This will only be called by the current class, not any
-    # nested classes. It doesn't do anything except call the
-    # mashumaro _to_dict, but leaving here for consistency
+    # nested classes. The only thing it does right now
+    # is wrap exceptions
     def to_dict( self, omit_none: bool = True):
-        dct = self._to_dict(omit_none=omit_none)
+        try:
+            dct = self._to_dict(omit_none=omit_none)
+        except Exception as exc:
+            holo_dict = self.holo_to_dict(omit_none=omit_none)
+            print(f"to_dict error: {type(self).__name__}: {holo_dict}")
+            msg = f"{type(self).__name__}: {str(exc)}"
+            raise ValidationError(msg)
         return dct
+
+
+    # This is just here as a temporary debugging aid
+    def holo_to_dict(
+        self, omit_none: bool = True, validate: bool = False
+    ) -> JsonDict:
+        """Converts the dataclass instance to a JSON encodable dict,
+           with optional JSON schema validation.
+           If omit_none (default True) is specified, any items with
+           value None are removed
+        """
+        data = {}
+        for field, target_field in self._get_fields():
+            value = self._encode_field(
+                field.type, getattr(self, field.name), omit_none
+            )
+            if omit_none and value is None:
+                continue
+            data[target_field] = value
+        if validate:
+            self.validate(data)
+        return data
 
     # This is called by the mashumaro to_dict in order to handle
     # nested classes.

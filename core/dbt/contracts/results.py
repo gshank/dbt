@@ -59,8 +59,8 @@ class collect_timing_info:
 class BaseResult(dbtClassMixin):
     node: CompileResultNode
     error: Optional[str] = None
-    status: Union[None, str, int, bool] = None
-    execution_time: Union[str, int] = 0
+    status: Optional[Union[str, int, bool]] = None
+    execution_time: Union[str, int, float] = 0
     thread_id: Optional[str] = None
     timing: List[TimingInfo] = field(default_factory=list)
     fail: Optional[bool] = None

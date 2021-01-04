@@ -415,6 +415,7 @@ class NodeConfig(BaseConfig):
     # method. validate=True removed, must be called explicitly
     @classmethod
     def before_from_dict(cls, data):
+        data = super().before_from_dict(data)
         field_map = {'post-hook': 'post_hook', 'pre-hook': 'pre_hook'}
         # create a new dict because otherwise it gets overwritten in
         # tests
